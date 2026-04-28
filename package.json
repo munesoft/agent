@@ -1,0 +1,33 @@
+{
+  "name": "@munesoft/agent",
+  "version": "1.10.11",
+  "description": "Munesoft Agent Framework — Build reliable AI agents in minutes. Multi-agent orchestration, visual workflows, universal LLM support.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test":             "node tests/run-all.js && node tests/run-v2.js",
+    "test:core":        "node tests/run-all.js",
+    "test:v2":          "node tests/run-v2.js",
+    "example":          "node examples/invoice-agent.js",
+    "example:support":  "node examples/support-agent.js",
+    "example:multi":    "node examples/multi-agent.js",
+    "example:workflow": "node examples/workflow.js"
+  },
+  "keywords": [
+    "ai", "agents", "automation", "llm", "orchestration", "tools",
+    "workflow", "munesoft", "openai", "claude", "gemini", "mistral",
+    "multi-agent", "function-calling", "streaming"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/munesoft/agent.git"
+  },
+  "homepage": "https://github.com/munesoft/agent#readme",
+  "bugs": {
+    "url": "https://github.com/munesoft/agent/issues"
+  },
+  "files": ["index.js", "index.d.ts", "packages/", "README.md"],
+  "dependencies": {},
+  "devDependencies": {}
+}

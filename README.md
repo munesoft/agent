@@ -3,7 +3,7 @@
 > **Build reliable AI agents in minutes.**
 > The Express.js for AI agents — modular, typed, production-ready.
 
-![version](https://img.shields.io/badge/version-1.10.10-teal)
+![version](https://img.shields.io/badge/version-2.0.0-teal)
 ![tests](https://img.shields.io/badge/tests-183%20passing-brightgreen)
 ![dependencies](https://img.shields.io/badge/dependencies-0-blue)
 ![license](https://img.shields.io/badge/license-MIT-orange)

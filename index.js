@@ -63,7 +63,7 @@ module.exports = {
   AI21Adapter:         llm.AI21Adapter,
   NovitaAdapter:       llm.NovitaAdapter,
 
-  // LLM — bridges
+  // LLM —bridges
   LangChainBridge:       llm.LangChainBridge,
   LangGraphBridge:       llm.LangGraphBridge,
   CrewAIBridge:          llm.CrewAIBridge,

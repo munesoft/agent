@@ -1,5 +1,6 @@
 "use strict";
 
+<<<<<<< HEAD
 /**
  * @munesoft/agent v3.0.0
  * Main entry point — exports all modules.
@@ -69,6 +70,41 @@ module.exports = {
   WorkflowBuilder, Workflow, WorkflowResult, WorkflowError, NODE_TYPES,
 
   // ── LLM — factory + introspection ───────────────────────────────────────────
+=======
+const { createAgent, Agent, AgentResponse }                              = require("./packages/core");
+const { ExecutionEngine, ExecutionResult, ExecutionTimeoutError }        = require("./packages/core/execution");
+const { IntentParser, IntentParseError }                                 = require("./packages/intent");
+const { ToolRegistry, ToolRegistryError }                                = require("./packages/tools");
+const { ActionRouter, RouterError, ToolNotFoundError, SchemaValidationError, UnresolvableIntentError } = require("./packages/router");
+const { MemoryLayer, InMemoryAdapter, FileAdapter, MemoryError }         = require("./packages/memory");
+const { Guardrails, GuardrailError, BlockedActionError }                 = require("./packages/guardrails");
+const { EventBus, globalBus }                                            = require("./packages/events");
+const { Orchestrator, PipelineResult, ParallelResult, OrchestratorError } = require("./packages/orchestrator");
+const { WorkflowBuilder, Workflow, WorkflowResult, WorkflowError, NODE_TYPES } = require("./packages/workflow");
+
+const llm = require("./packages/llm");
+
+module.exports = {
+  // Core
+  createAgent, Agent, AgentResponse,
+  ExecutionEngine, ExecutionResult, ExecutionTimeoutError,
+
+  // Modules
+  IntentParser, IntentParseError,
+  ToolRegistry, ToolRegistryError,
+  ActionRouter, RouterError, ToolNotFoundError, SchemaValidationError, UnresolvableIntentError,
+  MemoryLayer, InMemoryAdapter, FileAdapter, MemoryError,
+  Guardrails, GuardrailError, BlockedActionError,
+  EventBus, globalBus,
+
+  // Orchestration
+  Orchestrator, PipelineResult, ParallelResult, OrchestratorError,
+
+  // Workflow
+  WorkflowBuilder, Workflow, WorkflowResult, WorkflowError, NODE_TYPES,
+
+  // LLM — providers
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   createLLM:       llm.createLLM,
   createBridge:    llm.createBridge,
   listProviders:   llm.listProviders,
@@ -77,7 +113,10 @@ module.exports = {
   LLMError:        llm.LLMError,
   LLMConfigError:  llm.LLMConfigError,
 
+<<<<<<< HEAD
   // ── LLM — providers (21) ────────────────────────────────────────────────────
+=======
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   OpenAIAdapter:       llm.OpenAIAdapter,
   ClaudeAdapter:       llm.ClaudeAdapter,
   GeminiAdapter:       llm.GeminiAdapter,
@@ -100,7 +139,11 @@ module.exports = {
   AI21Adapter:         llm.AI21Adapter,
   NovitaAdapter:       llm.NovitaAdapter,
 
+<<<<<<< HEAD
   // ── LLM — framework bridges (23) ────────────────────────────────────────────
+=======
+  // LLM — bridges
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   LangChainBridge:       llm.LangChainBridge,
   LangGraphBridge:       llm.LangGraphBridge,
   CrewAIBridge:          llm.CrewAIBridge,

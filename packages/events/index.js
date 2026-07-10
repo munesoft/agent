@@ -50,6 +50,7 @@ class EventBus {
     this._handlers.get("*")?.forEach(h => { try { h({ event, ...payload }); } catch {} });
   }
 
+<<<<<<< HEAD
   /**
    * Emit an event and await every handler (handlers may be async).
    * Unlike emit(), rejections/throws are swallowed per-handler but all are awaited.
@@ -86,6 +87,8 @@ class EventBus {
     });
   }
 
+=======
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   /** Get recent event history */
   history(event, limit = 50) {
     const all = event ? this._history.filter(e => e.event === event) : this._history;

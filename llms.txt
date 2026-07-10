@@ -1,5 +1,6 @@
 # @munesoft/agent
 
+<<<<<<< HEAD
 > Node.js framework for reliable AI agents (v3). Pipeline: sanitize → parse intent →
 > guardrails → ROUTER BRAIN → execute → VERIFY → repair → memory. Includes file-safe
 > multi-agent orchestration, searchable session memory, visual workflows, 21 LLM
@@ -8,6 +9,15 @@
 
 ## Install
 npm install @munesoft/agent   (Node >= 16, CommonJS, zero-dependency core)
+=======
+> Zero-dependency Node.js framework for reliable AI agents. Pipeline: sanitize →
+> parse intent → guardrails → ROUTER BRAIN → execute → VERIFY → repair → memory.
+> Includes file-safe multi-agent orchestration, searchable session memory, visual
+> workflows, and 21 LLM providers + 23 framework bridges.
+
+## Install
+npm install @munesoft/agent   (Node >= 16, CommonJS, no runtime dependencies)
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
 ## Mental model
 An Agent turns natural language into a validated tool call, runs it, then checks the
@@ -47,8 +57,13 @@ SessionStore = searchable episodic memory (BM25 over an inverted index, append-o
 record(run) stores intent/decisions/tools/filesTouched/outcome; search(query,{file}) returns
 cited snippets + IDs. attachRecorder(agent, store) auto-captures runs from the event bus.
 makeRecallTool(store) gives any agent a search_prior_sessions tool. createHistoryResearchAgent
+<<<<<<< HEAD
 produces a pre-work report of related sessions. NOTE: this differs from MemoryLayer, which is a
 per-run KV+history cache.
+=======
+produces a pre-work report of related sessions. CtxAdapter bridges the `ctx` CLI for real
+coding-agent history. NOTE: this differs from MemoryLayer, which is a per-run KV+history cache.
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
 ## File-safe Orchestration (packages/orchestrator, packages/coordination)
 Orchestrator.parallel(tasks) is file-aware when tasks declare files:[]; overlapping edits are
@@ -78,6 +93,7 @@ langchain, langgraph, crewai, autogen, openai-agents, swarm, llamaindex, semanti
 haystack, flowise, dust, agentgpt, opendevin, superagi, metagpt, smolagents, agno, aaif,
 mcp, n8n, zapier, make.
 
+<<<<<<< HEAD
 ## Munesoft Stack Integrations (require("@munesoft/agent/integrations"))
 Opt-in adapters wiring the framework to the wider munesoft stack. The core stays zero-dependency:
 each adapter lazy-loads its package only when called, so requiring the barrel is always safe and
@@ -97,3 +113,9 @@ stackStatus() reports which stack packages are installed. Missing package => Int
 RouterError, ToolNotFoundError, AmbiguousIntentError, SchemaValidationError,
 ExecutionTimeoutError, AbortedError, CircuitOpenError, GuardrailError, RateLimitError,
 VerifyError, MemoryError, OrchestratorError, WorkflowError, LLMError, IntegrationError.
+=======
+## Errors (all named, instanceof-checkable)
+RouterError, ToolNotFoundError, AmbiguousIntentError, SchemaValidationError,
+ExecutionTimeoutError, AbortedError, CircuitOpenError, GuardrailError, RateLimitError,
+VerifyError, MemoryError, OrchestratorError, WorkflowError, LLMError.
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf

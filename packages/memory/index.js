@@ -6,6 +6,7 @@ class MemoryLayer {
     this._adapter          = opts.adapter          || null;
     this._maxItems         = opts.maxShortTermItems || 100;
     this._ttlMs            = opts.ttl              || null;
+<<<<<<< HEAD
     this._ns               = opts.namespace ? `${opts.namespace}:` : "";
     this.debug             = opts.debug            || false;
   }
@@ -17,18 +18,34 @@ class MemoryLayer {
     const k = this._key(key);
     if (!this._short.has(k) && this._short.size >= this._maxItems) this._short.delete(this._short.keys().next().value);
     this._short.set(k, { value, timestamp: Date.now(), expiresAt: this._ttlMs ? Date.now() + this._ttlMs : null });
+=======
+    this.debug             = opts.debug            || false;
+  }
+
+  // ── Short-term ─────────────────────────────────────────────────────────────
+  set(key, value) {
+    if (this._short.size >= this._maxItems) this._short.delete(this._short.keys().next().value);
+    this._short.set(key, { value, timestamp: Date.now(), expiresAt: this._ttlMs ? Date.now() + this._ttlMs : null });
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     return this;
   }
 
   get(key) {
+<<<<<<< HEAD
     const k = this._key(key);
     const e = this._short.get(k);
     if (!e) return null;
     if (e.expiresAt && Date.now() > e.expiresAt) { this._short.delete(k); return null; }
+=======
+    const e = this._short.get(key);
+    if (!e) return null;
+    if (e.expiresAt && Date.now() > e.expiresAt) { this._short.delete(key); return null; }
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     return e.value;
   }
 
   has(key)    { return this.get(key) !== null; }
+<<<<<<< HEAD
   delete(key) { this._short.delete(this._key(key)); return this; }
   clear()     { this._short.clear(); return this; }
 
@@ -46,6 +63,15 @@ class MemoryLayer {
       if (e.expiresAt && now > e.expiresAt) continue;
       r[this._ns && k.startsWith(this._ns) ? k.slice(this._ns.length) : k] = e.value;
     }
+=======
+  delete(key) { this._short.delete(key); return this; }
+  clear()     { this._short.clear(); return this; }
+
+  snapshot() {
+    const r = {};
+    for (const [k, e] of this._short.entries())
+      if (!e.expiresAt || Date.now() <= e.expiresAt) r[k] = e.value;
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     return r;
   }
 
@@ -104,6 +130,7 @@ class FileAdapter {
     this._cache = null;
   }
   _load()  { if (!this._cache) { try { this._cache = JSON.parse(this._fs.readFileSync(this._path, "utf8")); } catch { this._cache = {}; } } return this._cache; }
+<<<<<<< HEAD
   _save()  {
     // Atomic write: serialize to a temp file, then rename over the target so a
     // crash mid-write can never leave a partially-written store.
@@ -111,6 +138,9 @@ class FileAdapter {
     this._fs.writeFileSync(tmp, JSON.stringify(this._cache, null, 2));
     this._fs.renameSync(tmp, this._path);
   }
+=======
+  _save()  { this._fs.writeFileSync(this._path, JSON.stringify(this._cache, null, 2)); }
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   async get(k)    { return this._load()[k] || null; }
   async set(k, v) { this._load()[k] = v; this._save(); }
   async delete(k) { delete this._load()[k]; this._save(); }

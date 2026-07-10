@@ -40,11 +40,19 @@ async function testRouter() {
   const r = new ToolRegistry();
   r.register({ name: "greet", description: "Greet", schema: { name: "string" }, handler: async ({ name }) => `Hello ${name}!` });
   const router = new ActionRouter(r);
+<<<<<<< HEAD
   await test("routes valid intent",               async () => { const { tool, args } = await router.route({ action: "greet", params: { name: "World" }, confidence: 0.9 }); assertEqual(tool.name, "greet"); assertEqual(args.name, "World"); });
   await test("throws on unknown action",          async () => { let t=false; try { await router.route({ action: "unknown", params: {}, raw: "?" }); } catch { t=true; } assert(t); });
   await test("throws on missing tool",            async () => { let t=false; try { await router.route({ action: "nope", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
   await test("throws on missing required param",  async () => { let t=false; try { await router.route({ action: "greet", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
   await test("coerces string to number",          async () => { const r2 = new ToolRegistry(); r2.register({ name: "add", description: "add", schema: { a: "number", b: "number" }, handler: async ({ a, b }) => a+b }); const { args } = await new ActionRouter(r2).route({ action: "add", params: { a: "5", b: "3" }, confidence: 0.9 }); assertEqual(args.a, 5); assertEqual(args.b, 3); });
+=======
+  await test("routes valid intent",               () => { const { tool, args } = router.route({ action: "greet", params: { name: "World" }, confidence: 0.9 }); assertEqual(tool.name, "greet"); assertEqual(args.name, "World"); });
+  await test("throws on unknown action",          () => { let t=false; try { router.route({ action: "unknown", params: {}, raw: "?" }); } catch { t=true; } assert(t); });
+  await test("throws on missing tool",            () => { let t=false; try { router.route({ action: "nope", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
+  await test("throws on missing required param",  () => { let t=false; try { router.route({ action: "greet", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
+  await test("coerces string to number",          () => { const r2 = new ToolRegistry(); r2.register({ name: "add", description: "add", schema: { a: "number", b: "number" }, handler: async ({ a, b }) => a+b }); const { args } = new ActionRouter(r2).route({ action: "add", params: { a: "5", b: "3" }, confidence: 0.9 }); assertEqual(args.a, 5); assertEqual(args.b, 3); });
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 }
 
 // ── Execution Engine ───────────────────────────────────────────────────────────

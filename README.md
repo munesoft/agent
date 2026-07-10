@@ -3,6 +3,7 @@
 > **Build reliable AI agents in minutes.**
 > The Express.js for AI agents — modular, typed, production-ready.
 
+<<<<<<< HEAD
 [![npm version](https://img.shields.io/npm/v/@munesoft/agent.svg)](https://www.npmjs.com/package/@munesoft/agent)
 [![npm downloads](https://img.shields.io/npm/dm/@munesoft/agent.svg)](https://www.npmjs.com/package/@munesoft/agent)
 [![install size](https://img.shields.io/bundlephobia/minzip/@munesoft/agent.svg)](https://bundlephobia.com/package/@munesoft/agent)
@@ -10,11 +11,18 @@
 [![license](https://img.shields.io/npm/l/@munesoft/agent.svg)](./LICENSE)
 ![tests](https://img.shields.io/badge/tests-200%20passing-brightgreen)
 ![munesoft stack](https://img.shields.io/badge/munesoft%20stack-9%20integrations-8a2be2)
+=======
+![version](https://img.shields.io/badge/version-2.0.0-teal)
+![tests](https://img.shields.io/badge/tests-183%20passing-brightgreen)
+![dependencies](https://img.shields.io/badge/dependencies-0-blue)
+![license](https://img.shields.io/badge/license-MIT-orange)
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
 ---
 
 ## What is Munesoft Agent Framework?
 
+<<<<<<< HEAD
 Infrastructure for **real AI agents** — not chatbot wrappers. An agent turns natural
 language into a **validated tool call**, runs it, then **checks the result actually
 satisfied the task** before returning. Every stage of that pipeline is pluggable:
@@ -55,6 +63,28 @@ const res = await agent.run("Send invoice to John for $200");
 > layer at `@munesoft/agent/integrations`. The core stays zero-dependency; adapters
 > lazy-load their package only when called.
 
+=======
+Infrastructure for **real AI agents** — not chatbot wrappers. The most adaptable AI agent framework available:
+
+- **21 LLM providers** — every major model with native function/tool calling
+- **23 framework bridges** — plug into any AI ecosystem bidirectionally
+- **Multi-agent orchestration** — pipelines, parallel, routing, handoff
+- **Visual workflow builder** — node graphs with conditions, branches, transforms
+- **Event system** — subscribe to every stage of the agent lifecycle
+- **Streaming** — real-time stage-by-stage output for live UIs
+- **Zero dependencies** — pure Node.js
+
+```js
+import { createAgent, createLLM } from "@munesoft/agent";
+
+const llm   = createLLM("claude", { apiKey: process.env.ANTHROPIC_API_KEY });
+const agent = createAgent({ tools, llmProvider: llm });
+
+const result = await agent.run("Send invoice to John for $200");
+// → { success: true, tool: "send_invoice", output: { invoiceId: "INV-1001" } }
+```
+
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ---
 
 ## Install
@@ -65,6 +95,7 @@ npm install @munesoft/agent
 
 ---
 
+<<<<<<< HEAD
 ## Quickstart
 
 ### Without an LLM (rule-based, works instantly)
@@ -328,17 +359,26 @@ See [`examples/stack-agent.js`](examples/stack-agent.js) for a full end-to-end s
 
 ---
 
+=======
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ## LLM Providers
 
 Every major provider. Same interface. Native function calling on all.
 
 ```js
+<<<<<<< HEAD
 const { createLLM } = require("@munesoft/agent");
 
+=======
+import { createLLM } from "@munesoft/agent";
+
+// Pick any provider — the API never changes
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 const llm = createLLM("openai",      { apiKey: process.env.OPENAI_API_KEY });
 const llm = createLLM("claude",      { apiKey: process.env.ANTHROPIC_API_KEY });
 const llm = createLLM("gemini",      { apiKey: process.env.GEMINI_API_KEY });
 const llm = createLLM("grok",        { apiKey: process.env.XAI_API_KEY });
+<<<<<<< HEAD
 const llm = createLLM("ollama",      { model: "llama3.2" });                              // local
 const llm = createLLM("openrouter",  { apiKey: "...", model: "anthropic/claude-3.5-sonnet" }); // any model
 
@@ -364,12 +404,53 @@ await llm.functionCall({ system, user, tools });
 ```js
 const { listProviders } = require("@munesoft/agent");
 listProviders(); // every supported provider + alias
+=======
+const llm = createLLM("deepseek",    { apiKey: process.env.DEEPSEEK_API_KEY });
+const llm = createLLM("groq",        { apiKey: process.env.GROQ_API_KEY });
+const llm = createLLM("mistral",     { apiKey: process.env.MISTRAL_API_KEY });
+const llm = createLLM("cohere",      { apiKey: process.env.COHERE_API_KEY });
+const llm = createLLM("perplexity",  { apiKey: process.env.PERPLEXITY_API_KEY });
+const llm = createLLM("ollama",      { model: "llama3.2" });                           // local
+const llm = createLLM("openrouter",  { apiKey: "...", model: "anthropic/claude-3.5-sonnet" }); // any model
+```
+
+| Provider | Key | Function Calling | Notes |
+|----------|-----|:-:|-------|
+| **OpenAI** | `openai` / `gpt` | ✅ | Includes o1, o3 series |
+| **Anthropic Claude** | `claude` / `anthropic` | ✅ | claude-3.5-sonnet default |
+| **Google Gemini** | `gemini` / `google` / `google-deepmind` | ✅ | gemini-1.5-flash default |
+| **Google Vertex AI** | `vertex` / `vertexai` | ✅ | Requires projectId + token |
+| **Microsoft Azure OpenAI** | `azure` / `microsoft` | ✅ | Requires endpoint + deployment |
+| **AWS Bedrock** | `bedrock` / `aws` | ✅ | Claude, LLaMA, Mistral, Nova |
+| **Meta AI (LLaMA)** | `meta` / `llama` | ✅ | Via AWS Bedrock |
+| **Mistral AI** | `mistral` | ✅ | mistral-large-latest default |
+| **Cohere** | `cohere` | ✅ | command-r-plus default |
+| **xAI Grok** | `grok` / `xai` | ✅ | grok-2-latest default |
+| **Perplexity AI** | `perplexity` | ✅ | Online models supported |
+| **DeepSeek** | `deepseek` | ✅ | deepseek-chat default |
+| **Alibaba Qwen** | `qwen` / `alibaba` | ✅ | Via DashScope API |
+| **Baidu ERNIE** | `ernie` / `baidu` | ✅ | Auto token refresh |
+| **Hugging Face** | `huggingface` / `hf` | ✅ | Any HF Inference model |
+| **Ollama (local)** | `ollama` / `local` | ✅ | llama3.2 default |
+| **Together AI** | `together` | ✅ | LLaMA, Mistral, Qwen |
+| **Groq** | `groq` | ✅ | llama-3.3-70b default |
+| **Fireworks AI** | `fireworks` | ✅ | LLaMA-3.1-70B default |
+| **OpenRouter** | `openrouter` | ✅ | Routes to any model |
+| **AI21 Labs** | `ai21` / `jamba` | ✅ | Jamba-1.5-large default |
+| **NovitaAI** | `novita` | ✅ | LLaMA-3.1-70B default |
+
+```js
+// List all supported providers
+import { listProviders } from "@munesoft/agent";
+listProviders(); // ["ai21", "alibaba", "anthropic", "aws", ...]
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ```
 
 ---
 
 ## Framework Bridges
 
+<<<<<<< HEAD
 Plug Munesoft into any AI ecosystem — bidirectionally. Use Munesoft tools inside other
 frameworks, or wrap external frameworks as Munesoft tools.
 
@@ -392,6 +473,99 @@ SuperAGI · AgentGPT · OpenDevin · Flowise · Dust · AutoGPT
 ```js
 const { listBridges } = require("@munesoft/agent");
 listBridges();
+=======
+Plug Munesoft into any AI ecosystem — bidirectionally. Use Munesoft tools inside other frameworks, or wrap external frameworks as Munesoft tools.
+
+```js
+import { createBridge } from "@munesoft/agent";
+
+const bridge = createBridge("langchain");
+const bridge = createBridge("mcp");
+const bridge = createBridge("crewai");
+const bridge = createBridge("n8n", { webhookUrl: "..." });
+```
+
+### Agent Frameworks
+
+| Framework | Key | Export tools | Import as tool | Agent wrapping |
+|-----------|-----|:-:|:-:|:-:|
+| **LangChain** | `langchain` | ✅ | ✅ | ✅ |
+| **LangGraph** | `langgraph` | ✅ | ✅ | ✅ |
+| **CrewAI** | `crewai` | ✅ | ✅ | ✅ |
+| **Microsoft AutoGen** | `autogen` | ✅ | ✅ | ✅ |
+| **OpenAI Agents SDK** | `openai-agents` | ✅ | ✅ | ✅ |
+| **AutoGPT** | `autogpt` | ✅ | — | ✅ |
+| **OpenAI Swarm** | `swarm` | ✅ | ✅ | ✅ |
+| **LlamaIndex** | `llamaindex` | ✅ | ✅ | ✅ |
+| **Semantic Kernel** | `semantic-kernel` / `sk` | ✅ | ✅ | ✅ |
+| **Haystack** | `haystack` | ✅ | ✅ | — |
+| **SmolAgents** | `smolagents` | ✅ | ✅ | — |
+| **Agno** | `agno` | ✅ | ✅ | — |
+| **MetaGPT** | `metagpt` | ✅ | ✅ | — |
+| **SuperAGI** | `superagi` | ✅ | — | — |
+| **AgentGPT** | `agentgpt` | ✅ | — | — |
+| **OpenDevin** | `opendevin` / `all-hands` | ✅ | — | — |
+| **Flowise** | `flowise` | — | ✅ | — |
+| **Dust** | `dust` | — | ✅ | — |
+
+### Protocols & Standards
+
+| Standard | Key | Notes |
+|----------|-----|-------|
+| **Model Context Protocol (MCP)** | `mcp` | Full server + client, auto-import from any MCP server |
+| **Linux Foundation AAIF** | `aaif` | Agent Card generation, remote agent wrapping |
+
+### Automation Platforms
+
+| Platform | Key | Notes |
+|----------|-----|-------|
+| **n8n** | `n8n` | Webhook tool, node export |
+| **Zapier** | `zapier` | NLA actions, auto-import |
+| **Make (Integromat)** | `make` / `integromat` | Webhook tool |
+
+```js
+// List all bridges
+import { listBridges } from "@munesoft/agent";
+listBridges(); // ["aaif", "agentgpt", "agno", "autogen", "autogpt", ...]
+```
+
+### Bridge Examples
+
+```js
+// LangChain — use Munesoft tools inside LangChain
+const bridge = createBridge("langchain");
+const tools  = bridge.toTools(agent.registry);  // → DynamicStructuredTool[]
+// Use in: new AgentExecutor({ tools, agent: createOpenAIFunctionsAgent(...) })
+
+// LangGraph — Munesoft agent as a graph node
+const bridge = createBridge("langgraph");
+graph.addNode("invoice_agent", bridge.toNode(invoiceAgent));
+
+// CrewAI — Munesoft agent as a crew member
+const bridge = createBridge("crewai");
+const crewAgent = bridge.toCrewAgent(agent, { role: "Billing Specialist" });
+
+// MCP — serve Munesoft tools as an MCP server
+const bridge  = createBridge("mcp");
+const handler = bridge.createServerHandler(agent.registry);
+// handler.listTools() / handler.callTool({ name, arguments })
+
+// MCP — consume an MCP server's tools into Munesoft
+await bridge.importFromServer(mcpClient, agent.registry);
+// Now all MCP server tools are callable as Munesoft tools
+
+// AAIF — publish agent as a discoverable agent card
+const bridge = createBridge("aaif");
+const card   = bridge.toAgentCard(agent, { name: "Invoice Agent", version: "1.10.10" });
+
+// n8n — trigger a workflow from an agent tool
+const bridge = createBridge("n8n");
+agent.addTool(bridge.webhookTool("notify_team", "Notify team via n8n", "https://n8n.myco.com/webhook/abc"));
+
+// Zapier — auto-import all NLA actions as tools
+const bridge = createBridge("zapier", { nlaApiKey: process.env.ZAPIER_NLA_API_KEY });
+await bridge.importActions(agent.registry);
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ```
 
 ---
@@ -399,6 +573,7 @@ listBridges();
 ## Multi-Agent Orchestration
 
 ```js
+<<<<<<< HEAD
 const { Orchestrator } = require("@munesoft/agent");
 
 const orch = new Orchestrator();
@@ -421,6 +596,42 @@ await orch.parallel([
 await orch.route(input, (i, agents) => i.includes("analyze") ? "analyst" : "research");
 await orch.llmRoute(input, llm, { research: "find info", analyst: "analyze data" });
 orch.enableHandoff("research", ["analyst"]);
+=======
+import { Orchestrator } from "@munesoft/agent";
+
+const orch = new Orchestrator();
+orch.register("research", researchAgent)
+    .register("summary",  summaryAgent)
+    .register("email",    emailAgent);
+
+// Sequential pipeline
+const result = await orch.pipeline([
+  { agent: "research", input: "research AI trends", label: "Research" },
+  { agent: "summary",  input: (prev) => `summarize: ${JSON.stringify(prev.output)}` },
+  { agent: "email",    input: () => "send to ceo@company.com" },
+]);
+
+// Parallel execution
+const result = await orch.parallel([
+  { agent: "analyst", input: "analyze fintech" },
+  { agent: "analyst", input: "analyze healthtech" },
+  { agent: "analyst", input: "analyze cleantech" },
+]);
+
+// Function-based routing
+const result = await orch.route(input, (input, agents) =>
+  input.includes("analyze") ? "analyst" : "research"
+);
+
+// LLM-based routing
+const result = await orch.llmRoute(input, llm, {
+  research: "Research and find information",
+  analyst:  "Analyze data and recommend",
+});
+
+// Agent handoff
+orch.enableHandoff("research", ["analyst"]); // research can now delegate to analyst
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ```
 
 ---
@@ -428,11 +639,16 @@ orch.enableHandoff("research", ["analyst"]);
 ## Visual Workflow Builder
 
 ```js
+<<<<<<< HEAD
 const { WorkflowBuilder } = require("@munesoft/agent");
+=======
+import { WorkflowBuilder } from "@munesoft/agent";
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
 const workflow = new WorkflowBuilder({ name: "Support Ticket Flow" })
   .start("start")
   .agent("triage",    { agent: "triage",  input: (ctx) => ctx.issue })
+<<<<<<< HEAD
   .condition("check", { condition: (ctx) => ctx.triage_output?.priority === "high", onTrue: "escalate", onFalse: "queue" })
   .agent("escalate",  { agent: "urgent",  input: (ctx) => ctx.triage_output?.ticketId })
   .agent("queue",     { agent: "normal",  input: (ctx) => ctx.triage_output?.ticketId })
@@ -445,10 +661,32 @@ const workflow = new WorkflowBuilder({ name: "Support Ticket Flow" })
 const result = await workflow.execute(orchestrator, { issue: "server is down URGENT" });
 console.log(workflow.diagram());  // text diagram
 const json = workflow.toJSON();   // export for a visual editor
+=======
+  .condition("check", {
+    condition: (ctx) => ctx.triage_output?.priority === "high",
+    onTrue: "escalate", onFalse: "queue",
+  })
+  .agent("escalate",  { agent: "urgent",  input: (ctx) => ctx.triage_output?.ticketId })
+  .agent("queue",     { agent: "normal",  input: (ctx) => ctx.triage_output?.ticketId })
+  .transform("enrich", (ctx) => ({ ...ctx, processedAt: new Date().toISOString() }))
+  .agent("notify",    { agent: "notify",  input: (ctx) => ctx.triage_output?.ticketId })
+  .log("audit",       (ctx) => `Completed ${ctx.triage_output?.ticketId}`)
+  .end("end")
+  .connect("start","triage").connect("triage","check")
+  .connect("escalate","enrich").connect("queue","enrich")
+  .connect("enrich","notify").connect("notify","audit").connect("audit","end")
+  .build();
+
+const result = await workflow.execute(orchestrator, { issue: "server is down URGENT" });
+
+console.log(workflow.diagram());  // text-based diagram
+const json = workflow.toJSON();   // export for visual editor
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ```
 
 ---
 
+<<<<<<< HEAD
 ## Events
 
 ```js
@@ -465,22 +703,60 @@ const payload = await agent.events.waitFor("agent.run", { timeout: 5000 });
 ---
 
 ## Streaming
+=======
+## Core API
+
+### createAgent
+
+```ts
+createAgent({
+  tools:               ToolDefinition[];
+  rules?:              IntentRule[];
+  llmProvider?:        LLMAdapter;
+  memory?:             MemoryConfig;
+  guardrails?:         GuardrailsConfig | false;
+  events?:             EventBus;
+  execution?:          { timeout?: number; retries?: number };
+  useFunctionCalling?: boolean;
+  debug?:              boolean;
+}): Agent
+```
+
+### Streaming
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
 ```js
 await agent.stream("Send invoice to John for $200", (stage, data) => {
   if (stage === "intent")   console.log("Action:", data.intent.action);
+<<<<<<< HEAD
   if (stage === "routing")  console.log("Routed via:", data.decision.strategy);
   if (stage === "verified") console.log("Verified:", data.passed);
+=======
+  if (stage === "executed") console.log("Output:", data.output);
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   if (stage === "done")     console.log("Done in", data.response.duration, "ms");
 });
 ```
 
+<<<<<<< HEAD
+=======
+### Events
+
+```js
+agent.events.on("intent.parsed",  ({ intent }) => {});
+agent.events.on("tool.executed",  ({ tool, success, duration }) => {});
+agent.events.on("agent.error",    ({ error }) => {});
+agent.events.on("*",              ({ event, ...data }) => {}); // all events
+```
+
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ---
 
 ## Project Structure
 
 ```
 @munesoft/agent/
+<<<<<<< HEAD
 ├── index.js                    # Barrel — every public export
 ├── index.d.ts                  # TypeScript definitions
 ├── llms.txt                    # Machine-readable overview for LLMs
@@ -512,6 +788,32 @@ await agent.stream("Send invoice to John for $200", (stage, data) => {
     ├── run-v2.js               # v2 suite (136)
     ├── run-integration.js      # End-to-end orchestration (3)
     └── run-integrations.js     # Munesoft-stack adapters (14, self-skipping)
+=======
+├── index.js
+├── packages/
+│   ├── core/                  # Agent + Execution Engine
+│   ├── intent/                # Intent Parser
+│   ├── router/                # Action Router
+│   ├── memory/                # Memory + Adapters
+│   ├── guardrails/            # Validation + Safety
+│   ├── tools/                 # Tool Registry
+│   ├── events/                # Event Bus
+│   ├── orchestrator/          # Multi-Agent Orchestrator
+│   ├── workflow/              # Visual Workflow Builder
+│   └── llm/
+│       ├── index.js           # Factory: createLLM, createBridge
+│       ├── base.js            # BaseLLMAdapter
+│       ├── providers/         # 21 LLM provider adapters
+│       └── bridges/           # 23 framework bridges
+├── examples/
+│   ├── invoice-agent.js
+│   ├── support-agent.js
+│   ├── multi-agent.js
+│   └── workflow.js
+└── tests/
+    ├── run-all.js             # Core suite  (47 tests)
+    └── run-v2.js              # v2 suite   (136 tests)
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ```
 
 ---
@@ -519,6 +821,7 @@ await agent.stream("Send invoice to John for $200", (stage, data) => {
 ## Testing
 
 ```bash
+<<<<<<< HEAD
 npm test                # 186 core tests (core + v2 + integration) — zero deps required
 npm run test:integrations  # 14 munesoft-stack adapter tests (skips packages you don't have)
 npm run test:all        # everything (200 tests)
@@ -527,6 +830,11 @@ npm run example            # invoice agent
 npm run example:verified   # router brain + verification + auto-repair
 npm run example:research   # session memory + file-safe orchestration
 npm run example:stack      # full munesoft-stack integration
+=======
+npm test           # All 183 tests
+npm run test:core  # Core suite (47)
+npm run test:v2    # v2 suite (136)
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 ```
 
 ---

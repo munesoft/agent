@@ -1,5 +1,6 @@
 {
   "name": "@munesoft/agent",
+<<<<<<< HEAD
   "version": "3.0.0",
   "description": "Munesoft Agent Framework — Build reliable AI agents in minutes. Router brain, verification + auto-repair, session memory, multi-agent orchestration, and first-class integration with the munesoft stack. Zero-dependency core.",
   "main": "index.js",
@@ -36,6 +37,25 @@
     "workflow", "munesoft", "munesoft-stack", "openai", "claude", "gemini", "mistral",
     "multi-agent", "function-calling", "streaming", "router", "verification",
     "retry", "concurrency", "memory", "guardrails"
+=======
+  "version": "2.0.0",
+  "description": "Munesoft Agent Framework — Build reliable AI agents in minutes. Multi-agent orchestration, visual workflows, universal LLM support.",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test":             "node tests/run-all.js && node tests/run-v2.js",
+    "test:core":        "node tests/run-all.js",
+    "test:v2":          "node tests/run-v2.js",
+    "example":          "node examples/invoice-agent.js",
+    "example:support":  "node examples/support-agent.js",
+    "example:multi":    "node examples/multi-agent.js",
+    "example:workflow": "node examples/workflow.js"
+  },
+  "keywords": [
+    "ai", "agents", "automation", "llm", "orchestration", "tools",
+    "workflow", "munesoft", "openai", "claude", "gemini", "mistral",
+    "multi-agent", "function-calling", "streaming"
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   ],
   "license": "MIT",
   "repository": {
@@ -46,6 +66,7 @@
   "bugs": {
     "url": "https://github.com/munesoft/agent/issues"
   },
+<<<<<<< HEAD
   "files": ["index.js", "index.d.ts", "llms.txt", "LICENSE", "packages/", "README.md"],
   "dependencies": {},
   "peerDependencies": {
@@ -81,4 +102,9 @@
     "@munesoft/memoryx": "^1.1.2",
     "@munesoft/loopx": "^1.0.1"
   }
+=======
+  "files": ["index.js", "index.d.ts", "packages/", "README.md"],
+  "dependencies": {},
+  "devDependencies": {}
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 }

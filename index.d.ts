@@ -205,13 +205,27 @@ export class SessionStoreError extends Error {}
 export function tokenize(text: string): string[];
 export function attachRecorder(agent: Agent, store: SessionStore, opts?: { agentName?: string; extractFiles?: (ctx: any) => string[]; extractDecisions?: (ctx: any) => string[] }): () => void;
 export function recordRun(store: SessionStore, run: SessionRecordInput): any;
+<<<<<<< HEAD
 export function makeRecallTool(source: SessionStore, opts?: { name?: string; description?: string }): Tool;
+=======
+export function makeRecallTool(source: SessionStore | CtxAdapter, opts?: { name?: string; description?: string }): Tool;
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 export interface ResearchReport {
   task: string;
   relatedSessions: Array<{ id: string; score: number; snippet: string; outcome?: string }>;
   filesPreviouslyTouched: string[]; priorDecisions: string[]; knownGotchas: string[]; brief: string;
 }
+<<<<<<< HEAD
 export function createHistoryResearchAgent(cfg: { store: SessionStore; llm?: LLMAdapter; limit?: number }): { research(task: string, files?: string[]): Promise<ResearchReport> };
+=======
+export function createHistoryResearchAgent(cfg: { store: SessionStore | CtxAdapter; llm?: LLMAdapter; limit?: number }): { research(task: string, files?: string[]): Promise<ResearchReport> };
+export class CtxAdapter {
+  constructor(opts?: { bin?: string; debug?: boolean });
+  available(): boolean;
+  search(query: string, opts?: { limit?: number; file?: string; terms?: string[] }): Promise<SearchHit[]>;
+  show(kind: string, id: string, window?: number): string | null;
+}
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
 // ── Coordination ─────────────────────────────────────────────────────────────────
 export class FileCoordinator {
@@ -325,6 +339,7 @@ export class FireworksAdapter extends BaseLLMAdapter {}
 export class OpenRouterAdapter extends BaseLLMAdapter {}
 export class AI21Adapter extends BaseLLMAdapter {}
 export class NovitaAdapter extends BaseLLMAdapter {}
+<<<<<<< HEAD
 
 // ── Munesoft Stack Integrations (opt-in) ────────────────────────────────────────
 // Import from "@munesoft/agent/integrations". Each adapter lazy-loads its package,
@@ -383,3 +398,5 @@ declare module "@munesoft/agent/integrations" {
     concurrency?: number; context?: object; [key: string]: unknown;
   }): Promise<{ success: boolean; outputs: Array<{ agent: string; success: boolean; output: unknown }>; raw: any[] }>;
 }
+=======
+>>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf

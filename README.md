@@ -3,7 +3,6 @@
 > **Build reliable AI agents in minutes.**
 > The Express.js for AI agents — modular, typed, production-ready.
 
-<<<<<<< HEAD
 [![npm version](https://img.shields.io/npm/v/@munesoft/agent.svg)](https://www.npmjs.com/package/@munesoft/agent)
 [![npm downloads](https://img.shields.io/npm/dm/@munesoft/agent.svg)](https://www.npmjs.com/package/@munesoft/agent)
 [![install size](https://img.shields.io/bundlephobia/minzip/@munesoft/agent.svg)](https://bundlephobia.com/package/@munesoft/agent)
@@ -12,11 +11,6 @@
 ![tests](https://img.shields.io/badge/tests-200%20passing-brightgreen)
 ![munesoft stack](https://img.shields.io/badge/munesoft%20stack-9%20integrations-8a2be2)
 =======
-![version](https://img.shields.io/badge/version-2.0.0-teal)
-![tests](https://img.shields.io/badge/tests-183%20passing-brightgreen)
-![dependencies](https://img.shields.io/badge/dependencies-0-blue)
-![license](https://img.shields.io/badge/license-MIT-orange)
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
 ---
 

@@ -1,0 +1,70 @@
+{
+  "name": "@munesoft/api-normalizer",
+  "version": "1.0.0",
+  "description": "Universal utility to normalize inconsistent API responses into a consistent, predictable structure.",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc --project tsconfig.build.json && node scripts/build-esm.js",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage --runInBand",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run test && npm run build"
+  },
+  "keywords": [
+    "api",
+    "normalization",
+    "mapping",
+    "transformation",
+    "data",
+    "backend",
+    "integration",
+    "schema",
+    "typescript",
+    "zero-dependency"
+  ],
+  "author": "munesoft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/munesoft/api-normalizer"
+  },
+  "bugs": {
+    "url": "https://github.com/munesoft/api-normalizer/issues"
+  },
+  "homepage": "https://github.com/munesoft/api-normalizer#readme",
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.5",
+    "typescript": "^5.4.5"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.ts"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.ts"
+    ]
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "sideEffects": false
+}

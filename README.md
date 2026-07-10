@@ -5,8 +5,6 @@
 
 [![npm version](https://img.shields.io/npm/v/@munesoft/agent.svg)](https://www.npmjs.com/package/@munesoft/agent)
 [![npm downloads](https://img.shields.io/npm/dm/@munesoft/agent.svg)](https://www.npmjs.com/package/@munesoft/agent)
-[![install size](https://img.shields.io/bundlephobia/minzip/@munesoft/agent.svg)](https://bundlephobia.com/package/@munesoft/agent)
-[![node](https://img.shields.io/node/v/@munesoft/agent.svg)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/@munesoft/agent.svg)](./LICENSE)
 ![tests](https://img.shields.io/badge/tests-200%20passing-brightgreen)
 ![munesoft stack](https://img.shields.io/badge/munesoft%20stack-9%20integrations-8a2be2)

@@ -1,6 +1,5 @@
 "use strict";
 
-<<<<<<< HEAD
 /**
  * @munesoft/agent — Router Brain
  *
@@ -43,21 +42,10 @@ class ActionRouter {
    * @returns {Promise<{tool:object, args:object, decision:object}>}
    */
   async route(intent) {
-=======
-class ActionRouter {
-  constructor(registry, opts = {}) {
-    if (!registry) throw new RouterError("ActionRouter requires a ToolRegistry");
-    this.registry = registry;
-    this.debug    = opts.debug || false;
-  }
-
-  route(intent) {
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     if (!intent?.action) throw new RouterError("Intent must have an action field");
     if (intent.action === "unknown")
       throw new UnresolvableIntentError(`Could not determine action for: "${intent.raw || "unknown"}"`);
 
-<<<<<<< HEAD
     const decision = this._score(intent.action);
 
     // Ambiguity → try an async tie-breaker before giving up.
@@ -132,30 +120,14 @@ class ActionRouter {
       return { strategy: "ambiguous", tool: null, resolved: null, score: top.score, candidates };
 
     return { strategy: "fuzzy", tool: top.name, resolved: top.name, score: top.score, candidates };
-=======
-    const tool = this.registry.get(intent.action);
-    if (!tool)
-      throw new ToolNotFoundError(
-        `No tool "${intent.action}". Available: ${this.registry.list().map(t => t.name).join(", ") || "none"}`);
-
-    const args = this._validateArgs(intent.params || {}, tool.schema, tool.name);
-    if (this.debug) console.log(`[Router] ${intent.action}`, args);
-    return { tool, args };
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   }
 
   _validateArgs(params, schema, toolName) {
     const result = {}, errors = [];
-<<<<<<< HEAD
     for (const [key, fieldDef] of Object.entries(schema || {})) {
       const def = normalizeField(fieldDef);
       const value = params[key];
 
-=======
-    for (const [key, fieldDef] of Object.entries(schema)) {
-      const def   = typeof fieldDef === "string" ? { type: fieldDef, required: true } : { required: true, ...fieldDef };
-      const value = params[key];
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
       if (def.required && (value === undefined || value === null || value === "")) {
         errors.push(`Missing required param "${key}" (${def.type})`); continue;
       }
@@ -163,7 +135,6 @@ class ActionRouter {
         if (def.default !== undefined) result[key] = def.default;
         continue;
       }
-<<<<<<< HEAD
 
       const coerced = this._coerce(value, def.type);
       if (coerced === null) { errors.push(`Param "${key}" must be ${def.type}, got ${typeof value}`); continue; }
@@ -171,11 +142,6 @@ class ActionRouter {
       const problem = validateConstraints(key, coerced, def);
       if (problem) { errors.push(problem); continue; }
       result[key] = coerced;
-=======
-      const coerced = this._coerce(value, def.type);
-      if (coerced === null) errors.push(`Param "${key}" must be ${def.type}, got ${typeof value}`);
-      else result[key] = coerced;
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     }
     for (const [k, v] of Object.entries(params)) if (!(k in result)) result[k] = v;
     if (errors.length) throw new SchemaValidationError(`Schema error for "${toolName}":\n  - ${errors.join("\n  - ")}`);
@@ -183,18 +149,11 @@ class ActionRouter {
   }
 
   _coerce(v, type) {
-<<<<<<< HEAD
     if (!type || type === "any") return v;
     switch (type) {
       case "string":  return String(v);
       case "number":  { const n = Number(v); return isNaN(n) ? null : n; }
       case "integer": { const n = Number(v); return isNaN(n) ? null : Math.trunc(n); }
-=======
-    if (!type) return v;
-    switch (type) {
-      case "string":  return String(v);
-      case "number":  { const n = Number(v); return isNaN(n) ? null : n; }
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
       case "boolean": return typeof v === "boolean" ? v : v === "true" ? true : v === "false" ? false : null;
       case "array":   return Array.isArray(v) ? v : null;
       case "object":  return typeof v === "object" && !Array.isArray(v) ? v : null;
@@ -203,7 +162,6 @@ class ActionRouter {
   }
 }
 
-<<<<<<< HEAD
 // ── Field helpers ─────────────────────────────────────────────────────────────
 function normalizeField(fieldDef) {
   if (typeof fieldDef === "string") {
@@ -268,11 +226,3 @@ class SchemaValidationError   extends RouterError { constructor(m) { super(m); t
 class AmbiguousIntentError    extends RouterError { constructor(m, candidates = []) { super(m); this.name = "AmbiguousIntentError"; this.candidates = candidates; } }
 
 module.exports = { ActionRouter, RouterError, ToolNotFoundError, UnresolvableIntentError, SchemaValidationError, AmbiguousIntentError };
-=======
-class RouterError           extends Error { constructor(m) { super(m); this.name = "RouterError"; } }
-class ToolNotFoundError     extends RouterError { constructor(m) { super(m); this.name = "ToolNotFoundError"; } }
-class UnresolvableIntentError extends RouterError { constructor(m) { super(m); this.name = "UnresolvableIntentError"; } }
-class SchemaValidationError extends RouterError { constructor(m) { super(m); this.name = "SchemaValidationError"; } }
-
-module.exports = { ActionRouter, RouterError, ToolNotFoundError, UnresolvableIntentError, SchemaValidationError };
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf

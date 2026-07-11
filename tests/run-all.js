@@ -1,5 +1,5 @@
 "use strict";
-const { createAgent, IntentParser, ToolRegistry, ActionRouter, ExecutionEngine, MemoryLayer, InMemoryAdapter, Guardrails } = require("../index");
+const { createAgent, IntentParser, ToolRegistry, ActionRouter, ExecutionEngine, MemoryLayer, InMemoryAdapter, Guardrails, AbortedError, CircuitOpenError, CodingHistoryAdapter } = require("../index");
 
 let passed = 0, failed = 0;
 async function test(name, fn) {
@@ -20,6 +20,8 @@ async function testIntent() {
   await test("parses email intent",               async () => { const i = await p.parse("send email to bob@x.com"); assertEqual(i.action, "send_email"); });
   await test("returns unknown for no match",      async () => { const i = await p.parse("fly me to the moon"); assertEqual(i.action, "unknown"); assertEqual(i.confidence, 0); });
   await test("throws on empty input",             async () => { let t=false; try { await p.parse(""); } catch { t=true; } assert(t); });
+  await test("rejects whitespace-only input",      async () => { let threw=false; try { await p.parse("   " ); } catch { threw=true; } assert(threw); });
+  await test("global regex rules are reusable",  async () => { const q = new IntentParser({ fallbackRules: [{ pattern: /ping/g, action: "ping" }] }); assertEqual((await q.parse("ping")).action, "ping"); assertEqual((await q.parse("ping")).action, "ping"); });
   await test("trims whitespace",                  async () => { const i = await p.parse("  send invoice to Alice for $100  "); assertEqual(i.action, "send_invoice"); });
 }
 
@@ -40,25 +42,17 @@ async function testRouter() {
   const r = new ToolRegistry();
   r.register({ name: "greet", description: "Greet", schema: { name: "string" }, handler: async ({ name }) => `Hello ${name}!` });
   const router = new ActionRouter(r);
-<<<<<<< HEAD
   await test("routes valid intent",               async () => { const { tool, args } = await router.route({ action: "greet", params: { name: "World" }, confidence: 0.9 }); assertEqual(tool.name, "greet"); assertEqual(args.name, "World"); });
   await test("throws on unknown action",          async () => { let t=false; try { await router.route({ action: "unknown", params: {}, raw: "?" }); } catch { t=true; } assert(t); });
   await test("throws on missing tool",            async () => { let t=false; try { await router.route({ action: "nope", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
   await test("throws on missing required param",  async () => { let t=false; try { await router.route({ action: "greet", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
   await test("coerces string to number",          async () => { const r2 = new ToolRegistry(); r2.register({ name: "add", description: "add", schema: { a: "number", b: "number" }, handler: async ({ a, b }) => a+b }); const { args } = await new ActionRouter(r2).route({ action: "add", params: { a: "5", b: "3" }, confidence: 0.9 }); assertEqual(args.a, 5); assertEqual(args.b, 3); });
-=======
-  await test("routes valid intent",               () => { const { tool, args } = router.route({ action: "greet", params: { name: "World" }, confidence: 0.9 }); assertEqual(tool.name, "greet"); assertEqual(args.name, "World"); });
-  await test("throws on unknown action",          () => { let t=false; try { router.route({ action: "unknown", params: {}, raw: "?" }); } catch { t=true; } assert(t); });
-  await test("throws on missing tool",            () => { let t=false; try { router.route({ action: "nope", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
-  await test("throws on missing required param",  () => { let t=false; try { router.route({ action: "greet", params: {}, confidence: 0.9 }); } catch { t=true; } assert(t); });
-  await test("coerces string to number",          () => { const r2 = new ToolRegistry(); r2.register({ name: "add", description: "add", schema: { a: "number", b: "number" }, handler: async ({ a, b }) => a+b }); const { args } = new ActionRouter(r2).route({ action: "add", params: { a: "5", b: "3" }, confidence: 0.9 }); assertEqual(args.a, 5); assertEqual(args.b, 3); });
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 }
 
 // ── Execution Engine ───────────────────────────────────────────────────────────
 async function testEngine() {
   console.log("\n⚙️  Execution Engine");
-  const eng = new ExecutionEngine({ timeout: 1000 });
+  const eng = new ExecutionEngine({ timeout: 1000, retryDelay: 1, jitter: false });
   const ok  = { name: "ok",    options: {}, handler: async ({ v }) => ({ doubled: v * 2 }) };
   const bad = { name: "bad",   options: {}, handler: async () => { throw new Error("boom"); } };
   const slow = { name: "slow", options: { timeout: 100 }, handler: async () => new Promise(r => setTimeout(r, 5000)) };
@@ -66,7 +60,11 @@ async function testEngine() {
   await test("returns error result on failure",   async () => { const r = await eng.execute(bad, {}); assert(r.failed); assert(r.error.message.includes("boom")); });
   await test("times out slow tools",              async () => { const r = await eng.execute(slow, {}); assert(r.failed); assertEqual(r.error.name, "ExecutionTimeoutError"); });
   await test("retries on failure",                async () => { let n=0; const flaky = { name: "f", options: { retries: 2 }, handler: async () => { if (++n < 3) throw new Error("not yet"); return "ok"; } }; const r = await eng.execute(flaky, {}); assert(r.success); assertEqual(n, 3); });
-  await test("result.toJSON() works",             async () => { const r = await eng.execute(ok, { v: 3 }); const j = r.toJSON(); assert(j.status === "success"); assert(j.output.doubled === 6); });
+  await test("result.toJSON() works",             async () => { const r = await eng.execute(ok, { v: 3 }); const j = r.toJSON(); assert(j.status === "success"); assert(j.output.doubled === 6); assertEqual(j.attempt, 0); });
+  await test("honors AbortSignal cancellation",    async () => { const controller = new AbortController(); controller.abort(); let ran = false; const r = await eng.execute({ name: "abort", handler: async () => { ran = true; } }, {}, { signal: controller.signal }); assert(r.error instanceof AbortedError); assert(!ran); });
+  await test("invokes onAttempt for each retry",   async () => { const attempts = []; let n = 0; const e = new ExecutionEngine({ retries: 1, retryDelay: 1, jitter: false, onAttempt: ({ attempt }) => attempts.push(attempt) }); const r = await e.execute({ name: "hook", handler: async () => { if (!n++) throw new Error("again"); return "ok"; } }, {}); assert(r.success); assertEqual(attempts.join(","), "0,1"); });
+  await test("opens a circuit after failures",     async () => { let calls = 0; const e = new ExecutionEngine({ breakerThreshold: 1, breakerCooldown: 1000 }); const tool = { name: "downstream", handler: async () => { calls++; throw new Error("down"); } }; await e.execute(tool, {}); const r = await e.execute(tool, {}); assert(r.error instanceof CircuitOpenError); assertEqual(calls, 1); });
+  await test("exports the coding history adapter",    () => { const ctx = new CodingHistoryAdapter({ bin: "__missing_ctx_binary__" }); assertEqual(ctx.available(), false); });
 }
 
 // ── Memory Layer ───────────────────────────────────────────────────────────────
@@ -78,6 +76,7 @@ async function testMemory() {
   await test("clears all",                        () => { const m = new MemoryLayer(); m.set("a",1); m.set("b",2); m.clear(); assertEqual(m.get("a"), null); });
   await test("conversation history",              () => { const m = new MemoryLayer(); m.addMessage("user","Hi"); m.addMessage("agent","Hello"); const h = m.getHistory(); assertEqual(h.length, 2); assertEqual(h[0].role, "user"); });
   await test("history limit",                     () => { const m = new MemoryLayer(); for(let i=0;i<10;i++) m.addMessage("user",`msg${i}`); assertEqual(m.getHistory(3).length, 3); });
+  await test("preserves falsy adapter values",    async () => { const m = new MemoryLayer({ adapter: new InMemoryAdapter() }); for (const [k,v] of [["zero",0],["false",false],["empty",""]]) { await m.persist(k,v); m.delete(k); assertEqual(await m.recall(k), v); } });
   await test("persists to adapter",               async () => { const m = new MemoryLayer({ adapter: new InMemoryAdapter() }); await m.persist("k","v"); const v = await m.recall("k"); assertEqual(v, "v"); });
   await test("evicts oldest at capacity",         () => { const m = new MemoryLayer({ maxShortTermItems: 3 }); m.set("a",1); m.set("b",2); m.set("c",3); m.set("d",4); assertEqual(m.get("a"), null); assert(m.has("d")); });
   await test("snapshot returns current state",    () => { const m = new MemoryLayer(); m.set("x",42); const s = m.snapshot(); assertEqual(s.x, 42); });
@@ -100,6 +99,7 @@ async function testGuardrails() {
 async function testPipeline() {
   console.log("\n🤖 Full Agent Pipeline");
   const agent = createAgent({
+    name: "core-test-agent",
     tools: [
       { name: "add",   description: "Add numbers", schema: { a: "number", b: "number" }, handler: async ({ a, b }) => ({ result: a + b }) },
       { name: "greet", description: "Greet person", schema: { name: "string" }, handler: async ({ name }) => ({ greeting: `Hello, ${name}!` }) },
@@ -109,6 +109,7 @@ async function testPipeline() {
       { pattern: /(?:say\s+)?hello\s+to\s+(\w+)/i,             action: "greet", extract: m => ({ name: m[1] }), confidence: 0.9 },
     ],
   });
+  await test("preserves configured agent name", () => { assertEqual(agent.name, "core-test-agent"); });
   await test("add_numbers succeeds",              async () => { const r = await agent.run("add 5 and 3"); assert(r.success); assertEqual(r.output.result, 8); });
   await test("greet succeeds",                    async () => { const r = await agent.run("say hello to Alice"); assert(r.success); assertEqual(r.output.greeting, "Hello, Alice!"); });
   await test("unresolvable returns failure",      async () => { const r = await agent.run("buy me a sandwich"); assert(!r.success); assert(r.error !== null); });

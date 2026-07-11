@@ -17,6 +17,7 @@ class IntentParser {
   async parse(input, availableTools = []) {
     if (!input || typeof input !== "string") throw new IntentParseError("Input must be a non-empty string");
     const trimmed = input.trim();
+    if (!trimmed) throw new IntentParseError("Input must be a non-empty string");
 
     // 1. Native function calling (most accurate, uses tool schemas directly)
     if (this.llmProvider && this.useFunctionCalling && availableTools.length > 0 &&
@@ -57,17 +58,18 @@ Respond ONLY with JSON: {"action":"tool_name_or_unknown","params":{},"confidence
     const raw = await this.llmProvider.complete({ system, user: input, format: "json" });
     const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
     if (!parsed.action) throw new IntentParseError("LLM returned invalid intent");
-    return { action: parsed.action, params: parsed.params || {}, confidence: parsed.confidence || 0.5, raw: input };
+    return { action: parsed.action, params: parsed.params || {}, confidence: parsed.confidence ?? 0.5, raw: input };
   }
 
   _parseRules(input) {
     for (const rule of this.fallbackRules) {
+      if (rule.pattern instanceof RegExp) rule.pattern.lastIndex = 0;
       const m = rule.pattern instanceof RegExp
         ? rule.pattern.exec(input)
         : input.toLowerCase().includes(rule.pattern.toLowerCase()) ? [input] : null;
       if (m) {
         const params = typeof rule.extract === "function" ? rule.extract(m, input) : {};
-        return { action: rule.action, params, confidence: rule.confidence || 0.7, raw: input };
+        return { action: rule.action, params, confidence: rule.confidence ?? 0.7, raw: input };
       }
     }
     return null;

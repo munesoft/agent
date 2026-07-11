@@ -17,7 +17,7 @@ export interface FieldSchema {
 
 export type ToolSchema = Record<string, FieldType | `${FieldType}?` | FieldSchema>;
 
-export interface ToolOptions { timeout?: number; retries?: number; tags?: string[]; aliases?: string[]; }
+export interface ToolOptions { timeout?: number; retries?: number; retryDelay?: number; maxBackoff?: number; jitter?: boolean; breakerThreshold?: number; breakerCooldown?: number; tags?: string[]; aliases?: string[]; }
 
 export interface Tool<A = any, O = any> {
   name: string;
@@ -110,6 +110,7 @@ export interface AgentConfig {
   verify?: Verifier | VerifierOptions;
   maxRepairs?: number;
   events?: EventBus;
+  approval?: ApprovalPolicy | ((request: ApprovalRequest) => boolean | Promise<boolean>);
   debug?: boolean;
 }
 export function createAgent(config?: AgentConfig): Agent;
@@ -119,6 +120,7 @@ export class Agent {
   guardrails: Guardrails | null; verifier: Verifier | null; events: EventBus;
   run(input: string, context?: Partial<RunContext>): Promise<AgentResponse>;
   stream(input: string, onEvent?: (stage: string, data: any) => void, context?: Partial<RunContext>): Promise<AgentResponse>;
+  streamEvents(input: string, context?: Partial<RunContext>): AsyncGenerator<AgentStreamItem>;
   addTool(tool: Tool): this;
   addCheck(spec: CheckSpec | CheckFn): this;
   use(fn: (input: string, ctx: RunContext) => Promise<string | void> | string | void): this;
@@ -137,7 +139,7 @@ export class AgentResponse {
 
 // ── Execution ───────────────────────────────────────────────────────────────────
 export interface ExecutionOptions {
-  timeout?: number; retries?: number; maxBackoff?: number; jitter?: boolean;
+  timeout?: number; retries?: number; retryDelay?: number; maxBackoff?: number; jitter?: boolean;
   breakerThreshold?: number; breakerCooldown?: number;
   onBeforeExecute?: (info: any) => any; onAfterExecute?: (info: any) => any; onAttempt?: (info: any) => any;
   debug?: boolean;
@@ -153,6 +155,7 @@ export class ExecutionResult {
   toJSON(): object;
 }
 export class ExecutionTimeoutError extends Error {}
+export class ExecutionError extends Error {}
 export class AbortedError extends Error {}
 export class CircuitOpenError extends Error {}
 
@@ -192,6 +195,7 @@ export interface SessionRecordInput {
   outcome?: string; summary?: string; events?: unknown[];
 }
 export interface SearchHit { id: string; score: number; snippet: string; session: any; }
+export interface SearchSource { search(query: string, opts?: { limit?: number; file?: string; terms?: string[] }): SearchHit[] | Promise<SearchHit[]>; }
 export class SessionStore {
   constructor(opts?: { path?: string | null; maxSnippet?: number; debug?: boolean });
   record(s: SessionRecordInput): any;
@@ -202,30 +206,22 @@ export class SessionStore {
   stats(): { sessions: number; uniqueTerms: number; indexedFiles: number };
 }
 export class SessionStoreError extends Error {}
-export function tokenize(text: string): string[];
-export function attachRecorder(agent: Agent, store: SessionStore, opts?: { agentName?: string; extractFiles?: (ctx: any) => string[]; extractDecisions?: (ctx: any) => string[] }): () => void;
-export function recordRun(store: SessionStore, run: SessionRecordInput): any;
-<<<<<<< HEAD
-export function makeRecallTool(source: SessionStore, opts?: { name?: string; description?: string }): Tool;
-=======
-export function makeRecallTool(source: SessionStore | CtxAdapter, opts?: { name?: string; description?: string }): Tool;
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
-export interface ResearchReport {
-  task: string;
-  relatedSessions: Array<{ id: string; score: number; snippet: string; outcome?: string }>;
-  filesPreviouslyTouched: string[]; priorDecisions: string[]; knownGotchas: string[]; brief: string;
-}
-<<<<<<< HEAD
-export function createHistoryResearchAgent(cfg: { store: SessionStore; llm?: LLMAdapter; limit?: number }): { research(task: string, files?: string[]): Promise<ResearchReport> };
-=======
-export function createHistoryResearchAgent(cfg: { store: SessionStore | CtxAdapter; llm?: LLMAdapter; limit?: number }): { research(task: string, files?: string[]): Promise<ResearchReport> };
-export class CtxAdapter {
+export class CodingHistoryAdapter implements SearchSource {
   constructor(opts?: { bin?: string; debug?: boolean });
   available(): boolean;
   search(query: string, opts?: { limit?: number; file?: string; terms?: string[] }): Promise<SearchHit[]>;
   show(kind: string, id: string, window?: number): string | null;
 }
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
+export function tokenize(text: string): string[];
+export function attachRecorder(agent: Agent, store: SessionStore, opts?: { agentName?: string; extractFiles?: (ctx: any) => string[]; extractDecisions?: (ctx: any) => string[] }): () => void;
+export function recordRun(store: SessionStore, run: SessionRecordInput): any;
+export function makeRecallTool(source: SearchSource, opts?: { name?: string; description?: string }): Tool;
+export interface ResearchReport {
+  task: string;
+  relatedSessions: Array<{ id: string; score: number; snippet: string; outcome?: string }>;
+  filesPreviouslyTouched: string[]; priorDecisions: string[]; knownGotchas: string[]; brief: string;
+}
+export function createHistoryResearchAgent(cfg: { store: SearchSource; llm?: LLMAdapter; limit?: number }): { research(task: string, files?: string[]): Promise<ResearchReport> };
 
 // ── Coordination ─────────────────────────────────────────────────────────────────
 export class FileCoordinator {
@@ -255,6 +251,9 @@ export class Guardrails {
 }
 export class GuardrailError extends Error {}
 export class BlockedActionError extends GuardrailError {}
+export class UnknownIntentError extends GuardrailError {}
+export class LowConfidenceError extends GuardrailError {}
+export class OutputValidationError extends GuardrailError {}
 export class RateLimitError extends GuardrailError {}
 export function redact(s: string): string;
 
@@ -300,8 +299,8 @@ export class WorkflowBuilder {
   log(id: string, message: string): this; retry(id: string, config: { targetNode: string; maxRetries?: number }): this;
   connect(from: string, to: string, label?: string): this; build(): Workflow;
 }
-export class Workflow { name: string; run(orchestrator: Orchestrator, input?: any): Promise<WorkflowResult>; toJSON(): object; }
-export class WorkflowResult { success: boolean; toJSON(): object; }
+export class Workflow { name: string; execute(orchestrator: Orchestrator, input?: any, options?: DurableRunOptions): Promise<WorkflowResult>; run(orchestrator: Orchestrator, input?: any, options?: DurableRunOptions): Promise<WorkflowResult>; resume(orchestrator: Orchestrator, runId: string, options: DurableRunOptions): Promise<WorkflowResult>; toJSON(): object; }
+export class WorkflowResult { success: boolean; runId?: string; toJSON(): object; }
 export class WorkflowError extends Error {}
 
 // ── LLM ──────────────────────────────────────────────────────────────────────────
@@ -314,7 +313,7 @@ export class BaseLLMAdapter implements LLMAdapter { constructor(opts?: LLMOption
 export class LLMError extends Error {}
 export class LLMConfigError extends LLMError {}
 export function createLLM(provider: string, opts?: LLMOptions): LLMAdapter;
-export function createBridge(framework: string, opts?: object): any;
+export function createBridge(framework: string, opts?: object): FrameworkBridge;
 export function listProviders(): string[];
 export function listBridges(): string[];
 
@@ -339,64 +338,63 @@ export class FireworksAdapter extends BaseLLMAdapter {}
 export class OpenRouterAdapter extends BaseLLMAdapter {}
 export class AI21Adapter extends BaseLLMAdapter {}
 export class NovitaAdapter extends BaseLLMAdapter {}
-<<<<<<< HEAD
 
-// ── Munesoft Stack Integrations (opt-in) ────────────────────────────────────────
-// Import from "@munesoft/agent/integrations". Each adapter lazy-loads its package,
-// which is declared as an OPTIONAL peer dependency — install only what you use.
-declare module "@munesoft/agent/integrations" {
-  import { Tool, Agent, EventBus, Orchestrator } from "@munesoft/agent";
+export interface FrameworkBridge { readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class LangChainBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class LangGraphBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class CrewAIBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class AutoGenBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class OpenAIAgentsBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class SwarmBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class LlamaIndexBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class SemanticKernelBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class HaystackBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class MCPBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class N8NBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class ZapierBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class MakeBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class SmolAgentsBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class AgnoBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class MetaGPTBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class FlowiseBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class SuperAGIBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class AAIFBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class OpenDevinBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class AgentGPTBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
+export class DustBridge implements FrameworkBridge { constructor(opts?: object); readonly name: string; readonly debug: boolean; [key: string]: any; }
 
-  export class IntegrationError extends Error { pkg: string; }
-  export function isAvailable(pkg: string): boolean;
-  export const STACK: Record<string, { adapters: string[]; use: string }>;
-  export function stackStatus(): Record<string, { adapters: string[]; use: string; installed: boolean }>;
 
-  // @munesoft/idx — stable internal IDs
-  export function idFactory(opts?: { length?: number; prefix?: string }): { id(len?: number): string; time(): string; readable(): string };
-  export function withStableIds<T extends object>(context?: T, opts?: { prefix?: string }): T & { sessionId: string };
-
-  // @munesoft/objx — safe nested access & settings merging
-  export function mergeSettings<T extends object>(target: T, ...sources: object[]): T;
-  export function safeGet<T = unknown>(obj: unknown, path: string, fallback?: T): T | undefined;
-  export function applyDefaults<T extends object>(target: T, defaults: Partial<T>): T;
-  export function hasPath(obj: unknown, path: string): boolean;
-
-  // @munesoft/retryx — safe, retryable API calls
-  export function withRetry<T>(fn: (ctx: { attempt: number; signal: AbortSignal }) => Promise<T> | T, opts?: object): Promise<T>;
-  export function retryableTool(tool: Tool, opts?: object): Tool;
-
-  // @munesoft/api-normalizer — normalize external responses
-  export function normalizeResponse<T = Record<string, unknown>>(data: unknown, schema: object, options?: object): { success: boolean; data?: T; error?: string };
-  export function inferResponseSchema(sample: unknown): object;
-  export function normalizingTool(tool: Tool, schema: object, options?: object): Tool;
-
-  // @munesoft/memoryx — semantic episodic memory / recall source
-  export function createMemoryxStore(opts?: object): {
-    memory: any;
-    record(s: object): Promise<object>;
-    search(query: string, opts?: { limit?: number }): Promise<Array<{ id: string; score: number; snippet: string; session: any }>>;
-  };
-
-  // @munesoft/loopx — drive multi-step AI loops
-  export function runAgentLoop(agent: Agent, input: string, opts?: {
-    maxIterations?: number;
-    until?: (res: any, step: any) => boolean | Promise<boolean>;
-    next?: (step: any, responses: any[]) => string;
-    sessionId?: string;
-    [key: string]: unknown;
-  }): Promise<{ result: any; responses: any[]; final: any | null }>;
-
-  // @munesoft/envx — environment validation & typed config (ESM, async)
-  export function loadAgentEnv(schema?: object, opts?: { path?: string; override?: boolean; strict?: boolean; debug?: boolean }): Promise<Record<string, unknown>>;
-
-  // @munesoft/logx — structured logs (ESM, async)
-  export function attachLogx(target: Agent | EventBus, opts?: { events?: string[]; prefix?: string }): Promise<() => void>;
-
-  // @munesoft/asyncx — concurrency limits for background jobs (ESM, async)
-  export function boundedParallel(orch: Orchestrator, tasks: Array<{ agent: string; input: any; files?: string[] }>, opts?: {
-    concurrency?: number; context?: object; [key: string]: unknown;
-  }): Promise<{ success: boolean; outputs: Array<{ agent: string; success: boolean; output: unknown }>; raw: any[] }>;
-}
-=======
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
+// Power features
+export interface ApprovalRequest { agent: Agent; input: string; intent: Intent; tool: Tool; args: Record<string, unknown>; context: RunContext; }
+export interface ApprovalRule { tools?: string | string[]; actions?: string | string[]; tags?: string | string[]; decision: "allow" | "deny" | "ask"; reason?: string; match?: (request: ApprovalRequest) => boolean; }
+export class ApprovalPolicy { constructor(opts?: { rules?: ApprovalRule[]; approve?: (request: ApprovalRequest & { rule?: ApprovalRule }) => boolean | { approved: boolean; reason?: string } | Promise<boolean | { approved: boolean; reason?: string }>; defaultDecision?: "allow" | "deny" | "ask" }); authorize(request: ApprovalRequest): Promise<boolean>; }
+export class ApprovalPolicyError extends Error {}
+export class ApprovalDeniedError extends ApprovalPolicyError { request: ApprovalRequest; }
+export interface CheckpointStore { load(runId: string): Promise<any>; save(runId: string, state: any): Promise<any>; delete(runId: string): Promise<boolean>; list(): Promise<any[]>; }
+export class MemoryCheckpointStore implements CheckpointStore { load(runId: string): Promise<any>; save(runId: string, state: any): Promise<any>; delete(runId: string): Promise<boolean>; list(): Promise<any[]>; }
+export class FileCheckpointStore implements CheckpointStore { constructor(opts?: { path?: string }); path: string; load(runId: string): Promise<any>; save(runId: string, state: any): Promise<any>; delete(runId: string): Promise<boolean>; list(): Promise<any[]>; }
+export interface DurableRunOptions { checkpointStore?: CheckpointStore; store?: CheckpointStore; runId?: string; resume?: boolean; maxSteps?: number; signal?: AbortSignal; context?: object; }
+export function runDurable(workflow: Workflow, orchestrator: Orchestrator, input?: object, opts?: DurableRunOptions): Promise<WorkflowResult>;
+export class DurableWorkflowError extends Error {}
+export class ModelRouter extends BaseLLMAdapter { constructor(opts?: { routes?: ModelRoute[]; fallback?: LLMAdapter; maxFailures?: number; cooldown?: number }); add(route: ModelRoute): this; list(): Array<{ name: string; healthy: boolean; priority: number }>; stream(args: any): AsyncGenerator<any>; }
+export interface ModelRoute { name?: string; adapter: LLMAdapter; priority?: number; when?: (args: any) => boolean; }
+export class ModelRouterError extends Error {}
+export class TraceCollector { constructor(opts?: { serviceName?: string; maxEvents?: number }); attach(target: Agent | EventBus): () => void; detach(): this; record(name: string, attributes?: object): this; startSpan(name: string, attributes?: object): { span: any; end(status?: string, extra?: object): any }; recordUsage(usage: { model?: string; inputTokens?: number; outputTokens?: number; cost?: number }): this; summary(): { events: number; spans: number; inputTokens: number; outputTokens: number; cost: number }; exportOTLP(): object; }
+export class Evaluator { constructor(opts?: { minScore?: number; metrics?: EvaluationMetric[] }); add(metric: EvaluationMetric): this; evaluate(input: unknown, output: unknown, context?: object): Promise<{ passed: boolean; score: number; results: any[] }>; }
+export interface EvaluationMetric { name?: string; weight?: number; evaluate(args: { input: unknown; output: unknown; context: object }): number | boolean | { score: number; reason?: string } | Promise<number | boolean | { score: number; reason?: string }>; }
+export class TraceError extends Error {}
+export class EvaluationError extends Error {}
+export type AgentStreamItem = { type: "event"; event: string; data: any } | { type: "result"; response: AgentResponse } | { type: "error"; error: Error };
+export function streamAgent(agent: Agent, input: string, context?: Partial<RunContext>): AsyncGenerator<AgentStreamItem>;
+export function collectStream(iterable: AsyncIterable<AgentStreamItem>): Promise<AgentStreamItem[]>;
+export class StreamError extends Error {}
+export function defineTool<A = any, O = any>(config: Tool<A, O> & { jsonSchema?: object; zod?: any }): Tool<A, O>;
+export function validateJsonSchema(schema: object, value: unknown): { valid: boolean; errors: string[] };
+export function jsonSchemaToToolSchema(schema: object): ToolSchema;
+export class SchemaDefinitionError extends Error {}
+export class ToolInputValidationError extends SchemaDefinitionError {}
+export class MCPDiscovery { constructor(opts?: { prefix?: boolean }); add(name: string, client: any, opts?: { prefix?: boolean }): this; remove(name: string): boolean; list(): string[]; discover(registry: ToolRegistry, opts?: { filter?: (tool: any, server: string) => boolean }): Promise<Array<{ server: string; source: string; name: string }>>; }
+export class MCPDiscoveryError extends Error {}
+export interface AgentPlugin { name: string; version?: string; description?: string; setup(api: any): void | (() => void) | Promise<void | (() => void)>; teardown?(context: any): void | Promise<void>; }
+export class PluginRegistry { constructor(context?: { registry?: ToolRegistry; orchestrator?: Orchestrator; [key: string]: any }); install(plugin: AgentPlugin, options?: object): Promise<this>; uninstall(name: string): Promise<boolean>; has(name: string): boolean; list(): Array<{ name: string; version: string; description: string; installedAt: string }>; }
+export class PluginError extends Error {}

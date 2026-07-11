@@ -9,12 +9,8 @@ class ToolRegistry {
     this._tools.set(tool.name, {
       name: tool.name, description: tool.description,
       schema: tool.schema || {}, handler: tool.handler,
-<<<<<<< HEAD
       aliases: tool.aliases || tool.options?.aliases || [],
       options: { timeout: tool.options?.timeout || 10000, retries: tool.options?.retries || 0, tags: tool.options?.tags || [], aliases: tool.aliases || tool.options?.aliases || [] },
-=======
-      options: { timeout: tool.options?.timeout || 10000, retries: tool.options?.retries || 0, tags: tool.options?.tags || [] },
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
       registeredAt: new Date().toISOString(),
     });
     return this;
@@ -23,12 +19,8 @@ class ToolRegistry {
   override(tool) {
     this._validate(tool);
     this._tools.set(tool.name, { ...(this._tools.get(tool.name) || {}), ...tool,
-<<<<<<< HEAD
       aliases: tool.aliases || tool.options?.aliases || [],
       options: { timeout: tool.options?.timeout || 10000, retries: tool.options?.retries || 0, tags: tool.options?.tags || [], aliases: tool.aliases || tool.options?.aliases || [] } });
-=======
-      options: { timeout: tool.options?.timeout || 10000, retries: tool.options?.retries || 0, tags: tool.options?.tags || [] } });
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     return this;
   }
 
@@ -40,11 +32,7 @@ class ToolRegistry {
 
   get(name)  { return this._tools.get(name) || null; }
   has(name)  { return this._tools.has(name); }
-<<<<<<< HEAD
   list()     { return Array.from(this._tools.values()).map(({ name, description, schema, options, aliases }) => ({ name, description, schema, tags: options.tags, aliases: aliases || [] })); }
-=======
-  list()     { return Array.from(this._tools.values()).map(({ name, description, schema, options }) => ({ name, description, schema, tags: options.tags })); }
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   getByTag(tag) { return this.list().filter(t => t.tags.includes(tag)); }
 
   _validate(tool) {

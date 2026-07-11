@@ -11,7 +11,7 @@ const {
   HaystackBridge, MCPBridge, N8NBridge, ZapierBridge, MakeBridge,
   SmolAgentsBridge, AgnoBridge, MetaGPTBridge, FlowiseBridge,
   SuperAGIBridge, AAIFBridge, OpenDevinBridge, AgentGPTBridge, DustBridge,
-  Orchestrator, WorkflowBuilder, EventBus, ToolRegistry,
+  Orchestrator, WorkflowBuilder, EventBus, ToolRegistry, BaseLLMAdapter, GuardrailError, UnknownIntentError, LowConfidenceError, OutputValidationError,
 } = require("../index");
 
 let passed = 0, failed = 0;
@@ -34,6 +34,18 @@ function makeAgent(action, fn) {
 // ─── LLM Provider Tests ───────────────────────────────────────────────────────
 async function testProviders() {
   console.log("\n🤖 LLM Providers — createLLM factory");
+  await test("BaseLLMAdapter honors URL paths and timeouts", async () => {
+    const http = require("http");
+    const server = http.createServer((req, res) => { res.setHeader("content-type", "application/json"); res.end(JSON.stringify({ path: req.url })); });
+    await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+    try {
+      const adapter = new BaseLLMAdapter({ requestTimeout: 1000 });
+      const address = server.address();
+      const result = await adapter._post("http://127.0.0.1:" + address.port + "/api", "/v1/test", {}, { ok: true });
+      assertEqual(result.path, "/api/v1/test");
+      assertEqual(adapter.requestTimeout, 1000);
+    } finally { await new Promise(resolve => server.close(resolve)); }
+  });
 
   // All providers that need API keys
   const keyTests = [
@@ -415,6 +427,9 @@ async function testEvents() {
   await test("unsubscribe fn returned",   () => { const b = new EventBus(); let n=0; const u = b.on("z", () => n++); u(); b.emit("z"); assertEqual(n, 0); });
   await test("history records events",    () => { const b = new EventBus(); b.emit("ev", { x: 1 }); b.emit("ev", { x: 2 }); assertEqual(b.history("ev").length, 2); });
   await test("history filtered by event", () => { const b = new EventBus(); b.emit("a"); b.emit("b"); b.emit("a"); assertEqual(b.history("a").length, 2); });
+  await test("respects maxHistory",         () => { const b = new EventBus({ maxHistory: 2 }); b.emit("a"); b.emit("b"); b.emit("c"); assertEqual(b.history().length, 2); assertEqual(b.history()[0].event, "b"); });
+  await test("once is safe under re-entry", () => { const b = new EventBus(); let n = 0; b.once("x", () => { n++; b.emit("x"); }); b.emit("x"); assertEqual(n, 1); });
+  await test("exports specific guardrail errors", () => { assert(new UnknownIntentError("x") instanceof GuardrailError); assert(new LowConfidenceError("x") instanceof GuardrailError); assert(new OutputValidationError("x") instanceof GuardrailError); });
 }
 
 // ─── Orchestrator Tests ───────────────────────────────────────────────────────

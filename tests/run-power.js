@@ -1,0 +1,28 @@
+"use strict";
+const assert = require("assert");
+const {
+  createAgent, WorkflowBuilder, Orchestrator, ToolRegistry,
+  CodingHistoryAdapter, ApprovalPolicy, ApprovalDeniedError,
+  MemoryCheckpointStore, runDurable, ModelRouter, TraceCollector, Evaluator,
+  defineTool, ToolInputValidationError, MCPDiscovery, PluginRegistry, collectStream,
+} = require("../index");
+
+let passed = 0;
+async function test(name, fn) { await fn(); passed++; console.log("  ok " + name); }
+function agentFor(name, handler, options = {}) { return createAgent({ name, tools: [{ name, description: name, schema: {}, handler, options }], rules: [{ pattern: /.+/, action: name, confidence: 1 }] }); }
+
+(async () => {
+  console.log("\nPower features");
+  await test("CodingHistoryAdapter renamed and exported", () => { assert.equal(typeof CodingHistoryAdapter, "function"); assert.equal(new CodingHistoryAdapter({ bin: "__missing__" }).available(), false); });
+  await test("ApprovalPolicy blocks denied tools", async () => { const policy = new ApprovalPolicy({ rules: [{ tools: "danger", decision: "deny" }] }); const agent = createAgent({ approval: policy, tools: [{ name: "danger", description: "danger", schema: {}, handler: async () => true }], rules: [{ pattern: /.+/, action: "danger", confidence: 1 }] }); const result = await agent.run("go"); assert(result.error instanceof ApprovalDeniedError); });
+  await test("ApprovalPolicy asks an approver", async () => { let asked = 0; const policy = new ApprovalPolicy({ rules: [{ tags: "sensitive", decision: "ask" }], approve: async () => { asked++; return true; } }); const agent = createAgent({ approval: policy, tools: [{ name: "send", description: "send", schema: {}, options: { tags: ["sensitive"] }, handler: async () => "sent" }], rules: [{ pattern: /.+/, action: "send", confidence: 1 }] }); assert((await agent.run("go")).success); assert.equal(asked, 1); });
+  await test("durable workflow resumes a failed node", async () => { let attempts = 0; const workflow = new WorkflowBuilder({ name: "durable" }).start("s").transform("work", () => { if (!attempts++) throw new Error("retry"); return { done: true }; }).end("e").connect("s", "work").connect("work", "e").build(); const store = new MemoryCheckpointStore(); const first = await runDurable(workflow, new Orchestrator(), {}, { store, runId: "r1" }); assert.equal(first.success, false); const second = await runDurable(workflow, new Orchestrator(), {}, { store, runId: "r1" }); assert.equal(second.success, true); assert.equal(second.context.done, true); });
+  await test("Workflow.run aliases execute", async () => { const workflow = new WorkflowBuilder().start("s").end("e").connect("s", "e").build(); assert((await workflow.run(new Orchestrator())).success); });
+  await test("ModelRouter falls back", async () => { const router = new ModelRouter({ routes: [{ name: "bad", priority: 2, adapter: { complete: async () => { throw new Error("down"); } } }, { name: "good", adapter: { complete: async () => "ok" } }] }); assert.equal(await router.complete({ user: "hi" }), "ok"); });
+  await test("TraceCollector and Evaluator report quality", async () => { const agent = agentFor("trace", async () => ({ ok: true })); const traces = new TraceCollector(); traces.attach(agent); await agent.run("go"); traces.recordUsage({ inputTokens: 2, outputTokens: 3, cost: 0.1 }); assert(traces.summary().events > 0); assert.equal(traces.summary().cost, 0.1); const evaluation = await new Evaluator({ metrics: [{ name: "ok", evaluate: ({ output }) => output.ok ? 1 : 0 }] }).evaluate("go", { ok: true }); assert(evaluation.passed); });
+  await test("async stream yields events and result", async () => { const items = await collectStream(agentFor("streamed", async () => "done").streamEvents("go")); assert(items.some(item => item.type === "event")); assert(items.some(item => item.type === "result" && item.response.success)); });
+  await test("defineTool validates JSON Schema", async () => { const tool = defineTool({ name: "age", description: "age", jsonSchema: { type: "object", required: ["age"], properties: { age: { type: "integer", minimum: 18 } } }, handler: async input => input }); assert.deepEqual(await tool.handler({ age: 20 }, {}), { age: 20 }); await assert.rejects(() => tool.handler({ age: 12 }, {}), ToolInputValidationError); });
+  await test("MCPDiscovery namespaces remote tools", async () => { const registry = new ToolRegistry(); const discovery = new MCPDiscovery().add("crm", { listTools: async () => ({ tools: [{ name: "find", description: "find", inputSchema: { type: "object", properties: { q: { type: "string" } }, required: ["q"] } }] }), callTool: async ({ arguments: args }) => ({ content: [{ type: "text", text: JSON.stringify(args) }] }) }); const imported = await discovery.discover(registry); assert.equal(imported[0].name, "crm__find"); assert.deepEqual(await registry.get("crm__find").handler({ q: "x" }), { q: "x" }); });
+  await test("PluginRegistry installs and removes bundles", async () => { let cleaned = false; const registry = new ToolRegistry(); const plugins = new PluginRegistry({ registry }); await plugins.install({ name: "demo", version: "1.0.0", setup: ({ registerTool }) => { registerTool({ name: "plugin_tool", description: "plugin", handler: async () => true }); return () => { cleaned = true; }; } }); assert(plugins.has("demo")); assert(registry.has("plugin_tool")); assert(await plugins.uninstall("demo")); assert(cleaned); assert(!registry.has("plugin_tool")); });
+  console.log("Power features passed: " + passed);
+})().catch(error => { console.error(error); process.exit(1); });

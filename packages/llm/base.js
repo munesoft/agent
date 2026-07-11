@@ -10,6 +10,7 @@ class BaseLLMAdapter {
     this.model       = opts.model;
     this.temperature = opts.temperature ?? 0.2;
     this.maxTokens   = opts.maxTokens   || 1024;
+    this.requestTimeout = opts.requestTimeout ?? 30000;
     this.debug       = opts.debug       || false;
   }
 
@@ -93,32 +94,50 @@ class BaseLLMAdapter {
 
   // ── HTTP helper ────────────────────────────────────────────────────────────
 
-  async _post(hostname, path, headers, body) {
-    const https   = require("https");
+  async _post(hostname, requestPath, headers, body) {
+    const https = require("https");
+    const http = require("http");
     const payload = JSON.stringify(body);
+    let transport = https;
+    let targetPath = requestPath;
+    let options = { hostname, path: targetPath };
+
+    if (/^https?:\/\//i.test(hostname)) {
+      const base = new URL(hostname);
+      transport = base.protocol === "http:" ? http : https;
+      const basePath = base.pathname.replace(/\/$/, "");
+      if (basePath && !requestPath.startsWith(basePath + "/") && requestPath !== basePath) targetPath = basePath + requestPath;
+      options = { protocol: base.protocol, hostname: base.hostname, port: base.port || undefined, path: targetPath };
+    }
+
     return new Promise((resolve, reject) => {
-      const req = https.request(
+      const req = transport.request(
         {
-          hostname, path, method: "POST",
+          ...options, method: "POST",
           headers: {
-            "Content-Type":   "application/json",
+            "Content-Type": "application/json",
             "Content-Length": Buffer.byteLength(payload),
             ...headers,
           },
         },
         res => {
           let data = "";
-          res.on("data", c => data += c);
+          res.setEncoding("utf8");
+          res.on("data", chunk => { data += chunk; });
           res.on("end", () => {
-            try {
-              const p = JSON.parse(data);
-              if (p.error) reject(new LLMError(`${this.constructor.name}: ${p.error.message || JSON.stringify(p.error)}`));
-              else resolve(p);
-            } catch (e) { reject(e); }
+            let parsed;
+            try { parsed = data ? JSON.parse(data) : {}; }
+            catch (error) { return reject(new LLMError(this.constructor.name + ": invalid JSON response (HTTP " + res.statusCode + ")")); }
+            if (res.statusCode < 200 || res.statusCode >= 300 || parsed.error) {
+              const detail = parsed.error?.message || parsed.message || data.slice(0, 500) || "request failed";
+              return reject(new LLMError(this.constructor.name + ": HTTP " + res.statusCode + " - " + detail));
+            }
+            resolve(parsed);
           });
         }
       );
       req.on("error", reject);
+      if (this.requestTimeout > 0) req.setTimeout(this.requestTimeout, () => req.destroy(new LLMError(this.constructor.name + ": request timed out after " + this.requestTimeout + "ms")));
       req.write(payload);
       req.end();
     });

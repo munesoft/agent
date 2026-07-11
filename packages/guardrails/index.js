@@ -1,6 +1,5 @@
 "use strict";
 
-<<<<<<< HEAD
 /**
  * @munesoft/agent — Guardrails
  * Answers "is this allowed / safe?" (the Verifier answers "is it correct?").
@@ -42,17 +41,6 @@ class Guardrails {
     this.rateWindowMs      = opts.rateWindowMs      || 60000;
     this.debug             = opts.debug             || false;
     this._rateHits         = [];
-=======
-class Guardrails {
-  constructor(opts = {}) {
-    this.maxRetries       = opts.maxRetries      || 3;
-    this.allowedActions   = opts.allowedActions  || null;
-    this.blockedActions   = opts.blockedActions  || [];
-    this.outputValidators = opts.outputValidators || [];
-    this.inputSanitizers  = opts.inputSanitizers  || [];
-    this.maxInputLength   = opts.maxInputLength   || 10000;
-    this.debug            = opts.debug            || false;
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   }
 
   sanitizeInput(input) {
@@ -61,7 +49,6 @@ class Guardrails {
       throw new GuardrailError(`Input too long (${input.length} > ${this.maxInputLength})`);
     let s = input;
     for (const fn of this.inputSanitizers) s = fn(s);
-<<<<<<< HEAD
     if (this.redactSecrets) s = redact(s);
     return s.trim();
   }
@@ -79,25 +66,14 @@ class Guardrails {
 
   validateIntent(intent) {
     this.checkRate();
-=======
-    return s.trim();
-  }
-
-  validateIntent(intent) {
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     if (!intent?.action)                           throw new GuardrailError("Intent must have an action");
     if (intent.action === "unknown")               throw new UnknownIntentError("Agent could not determine action");
     if (this.allowedActions && !this.allowedActions.includes(intent.action))
       throw new BlockedActionError(`Action "${intent.action}" not in allowedActions`);
     if (this.blockedActions.includes(intent.action))
       throw new BlockedActionError(`Action "${intent.action}" is blocked`);
-<<<<<<< HEAD
     if (intent.confidence !== undefined && intent.confidence < this.minConfidence)
       throw new LowConfidenceError(`Confidence too low (${intent.confidence.toFixed(2)} < ${this.minConfidence})`);
-=======
-    if (intent.confidence !== undefined && intent.confidence < 0.3)
-      throw new LowConfidenceError(`Confidence too low (${intent.confidence.toFixed(2)})`);
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     return true;
   }
 
@@ -108,33 +84,23 @@ class Guardrails {
       const r = v(result.output, tool);
       if (r !== true) throw new OutputValidationError(`Output validation failed: ${r}`);
     }
-<<<<<<< HEAD
     if (this.blockOutputSecrets) {
       const str = typeof result.output === "string" ? result.output : JSON.stringify(result.output ?? "");
       if (containsSecret(str)) throw new OutputValidationError("Output appears to contain a secret/credential");
     }
-=======
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
     return true;
   }
 
   addInputSanitizer(fn)  { if (typeof fn !== "function") throw new GuardrailError("Must be a function"); this.inputSanitizers.push(fn);  return this; }
   addOutputValidator(fn) { if (typeof fn !== "function") throw new GuardrailError("Must be a function"); this.outputValidators.push(fn); return this; }
   blockAction(name)      { if (!this.blockedActions.includes(name)) this.blockedActions.push(name); return this; }
-<<<<<<< HEAD
   allowOnly(names)       { this.allowedActions = Array.isArray(names) ? names : [names]; return this; }
-=======
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 
   summary() {
     return { maxRetries: this.maxRetries, maxInputLength: this.maxInputLength,
       allowedActions: this.allowedActions, blockedActions: this.blockedActions,
-<<<<<<< HEAD
       outputValidators: this.outputValidators.length, inputSanitizers: this.inputSanitizers.length,
       redactSecrets: this.redactSecrets, rateLimit: this.rateLimit };
-=======
-      outputValidators: this.outputValidators.length, inputSanitizers: this.inputSanitizers.length };
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
   }
 }
 
@@ -143,11 +109,6 @@ class BlockedActionError   extends GuardrailError { constructor(m) { super(m); t
 class UnknownIntentError   extends GuardrailError { constructor(m) { super(m); this.name = "UnknownIntentError"; } }
 class LowConfidenceError   extends GuardrailError { constructor(m) { super(m); this.name = "LowConfidenceError"; } }
 class OutputValidationError extends GuardrailError { constructor(m) { super(m); this.name = "OutputValidationError"; } }
-<<<<<<< HEAD
 class RateLimitError       extends GuardrailError { constructor(m) { super(m); this.name = "RateLimitError"; } }
 
 module.exports = { Guardrails, GuardrailError, BlockedActionError, UnknownIntentError, LowConfidenceError, OutputValidationError, RateLimitError, redact };
-=======
-
-module.exports = { Guardrails, GuardrailError, BlockedActionError, UnknownIntentError, LowConfidenceError, OutputValidationError };
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf

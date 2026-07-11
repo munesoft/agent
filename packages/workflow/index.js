@@ -144,15 +144,23 @@ class Workflow {
     this.debug       = debug;
   }
 
-  async execute(orchestrator, initialContext = {}) {
-    const start   = Date.now();
-    const log     = [];
-    let   ctx     = { ...initialContext, _workflow: this.name };
-    let   current = this._startId;
-    let   steps   = 0;
-    const MAX     = 100;
+  async execute(orchestrator, initialContext = {}, options = {}) {
+    const checkpointStore = options.checkpointStore || null;
+    const runId = options.runId || "workflow_" + Date.now();
+    const saved = checkpointStore && options.resume !== false ? await checkpointStore.load(runId) : null;
+    const start = Date.now();
+    const log = Array.isArray(saved?.log) ? saved.log : [];
+    let ctx = saved?.context ? { ...saved.context } : { ...initialContext, _workflow: this.name };
+    let current = saved?.currentNode || this._startId;
+    let steps = saved?.steps || 0;
+    const MAX = options.maxSteps || 100;
+    const persist = async (status, currentNode, error = null) => {
+      if (!checkpointStore) return;
+      await checkpointStore.save(runId, { workflow: this.name, status, currentNode, context: ctx, log, steps, error: error ? { name: error.name, message: error.message } : null, updatedAt: new Date().toISOString() });
+    };
 
     while (current && steps++ < MAX) {
+      if (options.signal?.aborted) throw new WorkflowError("Workflow aborted");
       const node = this._nodes.get(current);
       if (!node) throw new WorkflowError(`Node "${current}" not found`);
       if (this.debug) console.log(`[Workflow] ${steps}: [${node.type}] ${current}`);
@@ -168,6 +176,7 @@ class Workflow {
 
           case NODE_TYPES.END:
             log.push({ id: current, type: node.type, output: null, duration: 0 });
+            await persist("completed", null);
             return new WorkflowResult({ success: true, ctx, log, duration: Date.now() - start, finalNode: current });
 
           case NODE_TYPES.AGENT: {
@@ -185,7 +194,7 @@ class Workflow {
             const branch = await node.condition(ctx);
             const next   = branch ? node.onTrue : node.onFalse;
             log.push({ id: current, type: node.type, output: { branch, next }, duration: Date.now() - t0 });
-            current = next; continue;
+            current = next; await persist("running", current); continue;
           }
 
           case NODE_TYPES.TRANSFORM: {
@@ -225,9 +234,11 @@ class Workflow {
         // Follow next edge
         const edge = this._edges.find(e => e.from === current);
         current    = edge ? edge.to : null;
+        await persist("running", current);
 
       } catch (err) {
         log.push({ id: current, type: node.type, error: err.message, duration: Date.now() - t0 });
+        await persist("failed", current, err);
         return new WorkflowResult({ success: false, ctx, log, duration: Date.now() - start, error: err, finalNode: current });
       }
     }
@@ -235,8 +246,12 @@ class Workflow {
     if (steps >= MAX)
       return new WorkflowResult({ success: false, ctx, log, duration: Date.now() - start, error: new Error("Max steps exceeded — possible loop") });
 
+    await persist("completed", null);
     return new WorkflowResult({ success: true, ctx, log, duration: Date.now() - start });
   }
+
+  run(orchestrator, initialContext = {}, options = {}) { return this.execute(orchestrator, initialContext, options); }
+  resume(orchestrator, runId, options = {}) { return this.execute(orchestrator, options.context || {}, { ...options, runId, resume: true }); }
 
   toJSON() {
     return { name: this.name, description: this.description,

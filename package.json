@@ -1,7 +1,6 @@
 {
   "name": "@munesoft/agent",
-<<<<<<< HEAD
-  "version": "3.0.0",
+  "version": "3.2.0",
   "description": "Munesoft Agent Framework — Build reliable AI agents in minutes. Router brain, verification + auto-repair, session memory, multi-agent orchestration, and first-class integration with the munesoft stack. Zero-dependency core.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -12,50 +11,51 @@
       "default": "./index.js"
     },
     "./integrations": {
+      "types": "./packages/integrations/index.d.ts",
       "require": "./packages/integrations/index.js",
       "default": "./packages/integrations/index.js"
     },
     "./package.json": "./package.json"
   },
   "scripts": {
-    "test":               "node tests/run-all.js && node tests/run-v2.js && node tests/run-integration.js",
-    "test:core":          "node tests/run-all.js",
-    "test:v2":            "node tests/run-v2.js",
-    "test:integration":   "node tests/run-integration.js",
-    "test:integrations":  "node tests/run-integrations.js",
-    "test:all":           "npm test && npm run test:integrations",
-    "example":            "node examples/invoice-agent.js",
-    "example:support":    "node examples/support-agent.js",
-    "example:multi":      "node examples/multi-agent.js",
-    "example:workflow":   "node examples/workflow.js",
-    "example:verified":   "node examples/verified-agent.js",
-    "example:research":   "node examples/research-then-edit.js",
-    "example:stack":      "node examples/stack-agent.js"
+    "test": "node tests/run-all.js && node tests/run-v2.js && node tests/run-integration.js && node tests/run-power.js",
+    "test:core": "node tests/run-all.js",
+    "test:v2": "node tests/run-v2.js",
+    "test:integration": "node tests/run-integration.js",
+    "test:integrations": "node tests/run-integrations.js",
+    "test:all": "npm test && npm run test:integrations",
+    "example": "node examples/invoice-agent.js",
+    "example:support": "node examples/support-agent.js",
+    "example:multi": "node examples/multi-agent.js",
+    "example:workflow": "node examples/workflow.js",
+    "example:verified": "node examples/verified-agent.js",
+    "example:research": "node examples/research-then-edit.js",
+    "example:stack": "node examples/stack-agent.js",
+    "prepublishOnly": "npm run test:all"
   },
   "keywords": [
-    "ai", "agents", "automation", "llm", "orchestration", "tools",
-    "workflow", "munesoft", "munesoft-stack", "openai", "claude", "gemini", "mistral",
-    "multi-agent", "function-calling", "streaming", "router", "verification",
-    "retry", "concurrency", "memory", "guardrails"
-=======
-  "version": "2.0.0",
-  "description": "Munesoft Agent Framework — Build reliable AI agents in minutes. Multi-agent orchestration, visual workflows, universal LLM support.",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "scripts": {
-    "test":             "node tests/run-all.js && node tests/run-v2.js",
-    "test:core":        "node tests/run-all.js",
-    "test:v2":          "node tests/run-v2.js",
-    "example":          "node examples/invoice-agent.js",
-    "example:support":  "node examples/support-agent.js",
-    "example:multi":    "node examples/multi-agent.js",
-    "example:workflow": "node examples/workflow.js"
-  },
-  "keywords": [
-    "ai", "agents", "automation", "llm", "orchestration", "tools",
-    "workflow", "munesoft", "openai", "claude", "gemini", "mistral",
-    "multi-agent", "function-calling", "streaming"
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
+    "ai",
+    "agents",
+    "automation",
+    "llm",
+    "orchestration",
+    "tools",
+    "workflow",
+    "munesoft",
+    "munesoft-stack",
+    "openai",
+    "claude",
+    "gemini",
+    "mistral",
+    "multi-agent",
+    "function-calling",
+    "streaming",
+    "router",
+    "verification",
+    "retry",
+    "concurrency",
+    "memory",
+    "guardrails"
   ],
   "license": "MIT",
   "repository": {
@@ -66,45 +66,69 @@
   "bugs": {
     "url": "https://github.com/munesoft/agent/issues"
   },
-<<<<<<< HEAD
-  "files": ["index.js", "index.d.ts", "llms.txt", "LICENSE", "packages/", "README.md"],
-  "dependencies": {},
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "llms.txt",
+    "LICENSE",
+    "packages/",
+    "README.md"
+  ],
   "peerDependencies": {
-    "@munesoft/envx": "^1.0.1",
-    "@munesoft/logx": "^1.10.11",
-    "@munesoft/retryx": "^1.114.12",
-    "@munesoft/asyncx": "^1.204.12",
-    "@munesoft/idx": "^1.0.10",
-    "@munesoft/objx": "^1.0.10",
     "@munesoft/api-normalizer": "^1.0.0",
+    "@munesoft/asyncx": "^1.204.12",
+    "@munesoft/envx": "^1.0.1",
+    "@munesoft/idx": "^1.0.10",
+    "@munesoft/logx": "^1.10.11",
+    "@munesoft/loopx": "^1.0.1",
     "@munesoft/memoryx": "^1.1.2",
-    "@munesoft/loopx": "^1.0.1"
+    "@munesoft/objx": "^1.0.10",
+    "@munesoft/retryx": "^1.114.12"
   },
   "peerDependenciesMeta": {
-    "@munesoft/envx": { "optional": true },
-    "@munesoft/logx": { "optional": true },
-    "@munesoft/retryx": { "optional": true },
-    "@munesoft/asyncx": { "optional": true },
-    "@munesoft/idx": { "optional": true },
-    "@munesoft/objx": { "optional": true },
-    "@munesoft/api-normalizer": { "optional": true },
-    "@munesoft/memoryx": { "optional": true },
-    "@munesoft/loopx": { "optional": true }
+    "@munesoft/envx": {
+      "optional": true
+    },
+    "@munesoft/logx": {
+      "optional": true
+    },
+    "@munesoft/retryx": {
+      "optional": true
+    },
+    "@munesoft/asyncx": {
+      "optional": true
+    },
+    "@munesoft/idx": {
+      "optional": true
+    },
+    "@munesoft/objx": {
+      "optional": true
+    },
+    "@munesoft/api-normalizer": {
+      "optional": true
+    },
+    "@munesoft/memoryx": {
+      "optional": true
+    },
+    "@munesoft/loopx": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "@munesoft/envx": "^1.0.1",
-    "@munesoft/logx": "^1.10.11",
-    "@munesoft/retryx": "^1.114.12",
-    "@munesoft/asyncx": "^1.204.12",
-    "@munesoft/idx": "^1.0.10",
-    "@munesoft/objx": "^1.0.10",
     "@munesoft/api-normalizer": "^1.0.0",
+    "@munesoft/asyncx": "^1.204.12",
+    "@munesoft/envx": "^1.0.1",
+    "@munesoft/idx": "^1.0.10",
+    "@munesoft/logx": "^1.10.11",
+    "@munesoft/loopx": "^1.0.1",
     "@munesoft/memoryx": "^1.1.2",
-    "@munesoft/loopx": "^1.0.1"
+    "@munesoft/objx": "^1.0.10",
+    "@munesoft/retryx": "^1.114.12"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   }
-=======
-  "files": ["index.js", "index.d.ts", "packages/", "README.md"],
-  "dependencies": {},
-  "devDependencies": {}
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
 }

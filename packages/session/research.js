@@ -13,12 +13,7 @@
 
 /**
  * A tool that lets an agent search prior sessions mid-task.
-<<<<<<< HEAD
  * @param {SessionStore} source  a SessionStore whose .search(query, opts) is queried
-=======
- * @param {SessionStore|object} source  a SessionStore, or any object with .search()
- *                                       (e.g. CtxAdapter) — same shape as SessionStore.search
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
  */
 function makeRecallTool(source, opts = {}) {
   return {
@@ -48,11 +43,7 @@ function makeRecallTool(source, opts = {}) {
  * prior sessions and returns a compact report the orchestrator can hand to editors.
  *
  * @param {object} cfg
-<<<<<<< HEAD
  * @param {SessionStore} cfg.store          search source (a SessionStore)
-=======
- * @param {SessionStore|object} cfg.store   search source (SessionStore or CtxAdapter)
->>>>>>> 8246ad4aceaf91a475b81dd0c18edecc194527cf
  * @param {object} [cfg.llm]                optional LLM adapter to prose-summarize; if
  *                                          omitted, a deterministic templated report is used
  * @param {number}[cfg.limit=5]

@@ -1,4 +1,4 @@
-﻿# @munesoft/agent
+# @munesoft/agent
 
 > **Build reliable AI agents in minutes.**
 > The Express.js for AI agents — modular, typed, production-ready.

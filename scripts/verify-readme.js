@@ -1,0 +1,11 @@
+"use strict";
+const fs = require("fs");
+const path = require("path");
+const file = path.join(__dirname, "..", "README.md");
+if (!fs.existsSync(file)) throw new Error("README.md is missing");
+const bytes = fs.readFileSync(file);
+if (bytes.length < 100) throw new Error("README.md is unexpectedly empty");
+if (bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf) throw new Error("README.md must be UTF-8 without BOM");
+const text = bytes.toString("utf8");
+if (!text.startsWith("# @munesoft/agent")) throw new Error("README.md must start with the package heading");
+console.log("README.md verified for npm packaging");

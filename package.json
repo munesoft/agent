@@ -1,6 +1,6 @@
 {
   "name": "@munesoft/agent",
-  "version": "3.2.1",
+  "version": "3.3.3",
   "description": "Munesoft Agent Framework — Build reliable AI agents in minutes. Router brain, verification + auto-repair, session memory, multi-agent orchestration, and first-class integration with the munesoft stack. Zero-dependency core.",
   "main": "index.js",
   "types": "index.d.ts",
@@ -31,7 +31,8 @@
     "example:verified": "node examples/verified-agent.js",
     "example:research": "node examples/research-then-edit.js",
     "example:stack": "node examples/stack-agent.js",
-    "prepublishOnly": "npm run test:all"
+    "prepublishOnly": "npm run test:all",
+    "prepack": "node scripts/verify-readme.js"
   },
   "keywords": [
     "ai",

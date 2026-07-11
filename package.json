@@ -1,6 +1,6 @@
 {
   "name": "@munesoft/agent",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Munesoft Agent Framework — Build reliable AI agents in minutes. Router brain, verification + auto-repair, session memory, multi-agent orchestration, and first-class integration with the munesoft stack. Zero-dependency core.",
   "main": "index.js",
   "types": "index.d.ts",
